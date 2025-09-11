@@ -91,7 +91,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
   return (
     <div className={cn("flex flex-col h-full w-full bg-white", className)}>
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 flex items-center justify-center mb-4">
@@ -166,7 +166,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-6 bg-white">
+      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
         <div className="max-w-4xl mx-auto">
           <div className="relative mb-4">
             <input

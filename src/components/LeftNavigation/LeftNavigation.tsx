@@ -7,9 +7,10 @@ interface LeftNavigationProps {
   currentView: string;
   onViewChange: (view: string) => void;
   onThreadSelect: (threadId: number) => void;
+  onWorkflowSelect: (workflowId: string) => void;
 }
 
-export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect }) => {
+export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect, onWorkflowSelect }) => {
   const [assistantsExpanded, setAssistantsExpanded] = useState(true);
   const [threadsExpanded, setThreadsExpanded] = useState(true);
   const [, setActiveThread] = useState(0);
@@ -56,7 +57,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
     // Set the selected workflow, clear thread selection, and navigate to deployment planner page
     setSelectedWorkflow(workflowId);
     setSelectedThread(null);
-    onViewChange('deploymentPlanner');
+    onWorkflowSelect(workflowId);
   };
 
   const handleThreadClick = (index: number) => {

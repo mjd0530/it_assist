@@ -431,6 +431,239 @@ Would you like the complete PowerShell deployment script for these policies?`,
   ]
 };
 
+// Deployment Assistant conversations
+export const deploymentConversations: Record<string, Message[]> = {
+  'new-workflow': [
+    {
+      id: '1',
+      content: 'I need to create a new deployment workflow for our Windows updates. We have about 150 devices that need to be updated with the latest security patches.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2)
+    },
+    {
+      id: '2',
+      content: `I'll help you create a comprehensive deployment workflow for Windows updates. Based on your device count, here's a recommended approach:
+
+## Workflow Strategy
+**Phase 1: Pre-deployment Assessment**
+- Run system scan to identify current patch levels
+- Categorize devices by criticality and update requirements
+- Create test group with 10-15 devices for validation
+
+**Phase 2: Staged Deployment**
+- **Wave 1**: IT department devices (5-10 devices)
+- **Wave 2**: Non-critical business users (50-75 devices)  
+- **Wave 3**: Critical systems with monitoring (25-50 devices)
+- **Wave 4**: Remote workers and remaining devices
+
+**Phase 3: Monitoring & Validation**
+- Real-time deployment status tracking
+- Automated rollback triggers for failed updates
+- Post-deployment validation and reporting
+
+Would you like me to help you configure the specific update policies for each phase?`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 + 1000 * 60 * 3)
+    },
+    {
+      id: '3',
+      content: 'Yes, let\'s start with the update policies. I want to ensure we have proper testing before rolling out to production devices.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 + 1000 * 60 * 6)
+    },
+    {
+      id: '4',
+      content: `Excellent approach! Here's a detailed policy configuration for your new workflow:
+
+## Update Policy Configuration
+
+### Test Group Policy
+- **Update Source**: Windows Update for Business
+- **Deferral Settings**: 0 days for feature updates, 7 days for quality updates
+- **Installation Schedule**: Automatic during business hours (9 AM - 5 PM)
+- **Restart Behavior**: Automatic restart with 15-minute warning
+- **Rollback Window**: 10 days for automatic rollback
+
+### Production Group Policy  
+- **Update Source**: WSUS with approval workflow
+- **Deferral Settings**: 30 days for feature updates, 14 days for quality updates
+- **Installation Schedule**: Maintenance windows (8 PM - 6 AM)
+- **Restart Behavior**: Scheduled restart with 2-hour warning
+- **Rollback Window**: 30 days for manual rollback
+
+### Critical Systems Policy
+- **Update Source**: Manual approval required
+- **Deferral Settings**: 60 days for feature updates, 30 days for quality updates
+- **Installation Schedule**: Pre-approved maintenance windows only
+- **Restart Behavior**: Manual restart with IT notification
+- **Rollback Window**: 60 days with immediate rollback capability
+
+Should I proceed with creating this workflow configuration?`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2 + 1000 * 60 * 10)
+    }
+  ],
+  'latam-workflow': [
+    {
+      id: '1',
+      content: 'We need to set up a deployment workflow specifically for our LATAM region. The time zones and network conditions are different from our main office.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4)
+    },
+    {
+      id: '2',
+      content: `I'll help you configure a LATAM-specific deployment workflow. Let me address the unique considerations for this region:
+
+## LATAM Deployment Considerations
+
+### Time Zone Management
+- **Primary Time Zones**: UTC-3 to UTC-6 (Argentina, Brazil, Mexico, etc.)
+- **Deployment Windows**: 10 PM - 6 AM local time for each country
+- **Business Hours**: 8 AM - 6 PM local time (avoid deployments)
+
+### Network Optimization
+- **Bandwidth Throttling**: Implement QoS to prevent network saturation
+- **Peer-to-Peer Updates**: Enable Delivery Optimization for faster downloads
+- **Regional WSUS**: Consider local WSUS server for better performance
+
+### Compliance Requirements
+- **Data Residency**: Ensure updates don't violate local data protection laws
+- **Audit Logging**: Enhanced logging for regulatory compliance
+- **Approval Workflows**: Multi-level approval for critical updates
+
+Would you like me to configure the specific time zones and network settings for your LATAM deployment?`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 + 1000 * 60 * 4)
+    },
+    {
+      id: '3',
+      content: 'Yes, please configure the time zones. We have offices in São Paulo, Mexico City, and Buenos Aires.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 + 1000 * 60 * 7)
+    },
+    {
+      id: '4',
+      content: `Perfect! Here's the time zone configuration for your LATAM offices:
+
+## LATAM Time Zone Configuration
+
+### São Paulo, Brazil (UTC-3)
+- **Deployment Window**: 10:00 PM - 6:00 AM (UTC-3)
+- **Business Hours**: 8:00 AM - 6:00 PM (UTC-3)
+- **Peak Network Usage**: 12:00 PM - 2:00 PM (lunch break)
+
+### Mexico City, Mexico (UTC-6)
+- **Deployment Window**: 10:00 PM - 6:00 AM (UTC-6)
+- **Business Hours**: 8:00 AM - 6:00 PM (UTC-6)
+- **Peak Network Usage**: 1:00 PM - 3:00 PM (lunch break)
+
+### Buenos Aires, Argentina (UTC-3)
+- **Deployment Window**: 10:00 PM - 6:00 AM (UTC-3)
+- **Business Hours**: 8:00 AM - 6:00 PM (UTC-3)
+- **Peak Network Usage**: 12:00 PM - 2:00 PM (lunch break)
+
+## Coordinated Deployment Strategy
+- **Staggered Rollout**: 2-hour intervals between regions
+- **Network Monitoring**: Real-time bandwidth usage tracking
+- **Fallback Schedule**: Weekend deployments if weekday windows fail
+
+The system will automatically adjust deployment times based on daylight saving time changes in each region.`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4 + 1000 * 60 * 12)
+    }
+  ],
+  'pst-bios-workflow': [
+    {
+      id: '1',
+      content: 'We need to create a specialized workflow for PST BIOS updates. These updates are critical and require careful handling due to the risk of bricking devices.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6)
+    },
+    {
+      id: '2',
+      content: `BIOS updates require special handling due to their critical nature. Here's a comprehensive PST BIOS update workflow:
+
+## PST BIOS Update Workflow
+
+### Pre-Update Validation
+- **Hardware Compatibility Check**: Verify BIOS version compatibility
+- **Power Requirements**: Ensure AC power connection and >50% battery
+- **System State**: Confirm no pending Windows updates or restarts
+- **Backup Creation**: Create system restore point and BIOS backup
+
+### Risk Mitigation
+- **Staged Rollout**: Maximum 5 devices per batch
+- **Rollback Preparation**: Keep previous BIOS version readily available
+- **Emergency Recovery**: USB recovery media prepared for each device model
+- **Monitoring**: Real-time status updates during update process
+
+### Update Process
+- **Manual Approval**: Each device requires explicit IT approval
+- **Scheduled Windows**: Updates only during pre-approved maintenance windows
+- **Progress Tracking**: Detailed logging of each update step
+- **Validation**: Post-update system functionality verification
+
+Would you like me to configure the specific BIOS update policies and validation steps?`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 + 1000 * 60 * 5)
+    },
+    {
+      id: '3',
+      content: 'Yes, please configure the validation steps. We have ThinkPad X1 Carbon Gen 9 and ThinkPad T14 Gen 2 models that need BIOS updates.',
+      role: 'user' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 + 1000 * 60 * 8)
+    },
+    {
+      id: '4',
+      content: `I'll configure the validation steps for your specific ThinkPad models:
+
+## Model-Specific BIOS Validation
+
+### ThinkPad X1 Carbon Gen 9
+**Pre-Update Checks:**
+- Current BIOS version: 1.45 or later required
+- Intel Management Engine: Version 15.0.30.1736 or later
+- Power state: AC connected, battery >50%
+- System temperature: <70°C
+
+**Update Process:**
+- Use Lenovo Vantage for automatic updates
+- Fallback: Lenovo BIOS Update Utility
+- Expected duration: 8-12 minutes
+- Critical: Do not interrupt power during update
+
+**Post-Update Validation:**
+- BIOS version verification
+- Boot sequence confirmation
+- Hardware component recognition
+- Network connectivity test
+
+### ThinkPad T14 Gen 2
+**Pre-Update Checks:**
+- Current BIOS version: 1.50 or later required
+- Intel Management Engine: Version 15.0.30.1736 or later
+- Power state: AC connected, battery >50%
+- System temperature: <70°C
+
+**Update Process:**
+- Use Lenovo System Update tool
+- Fallback: Manual BIOS flash utility
+- Expected duration: 10-15 minutes
+- Critical: Ensure stable network connection
+
+**Post-Update Validation:**
+- BIOS version verification
+- TPM functionality check
+- Hardware component recognition
+- Performance benchmark validation
+
+Both models will have automatic rollback enabled if validation fails.`,
+      role: 'assistant' as const,
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6 + 1000 * 60 * 15)
+    }
+  ]
+};
+
 export const mockChatSessions: ChatSession[] = [
   {
     id: '1',

@@ -11,7 +11,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) 
   // If a thread is selected (and it's not the new thread), show the Chat component
   if (selectedThread !== null && selectedThread !== undefined && selectedThread !== 0) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full">
         <Chat threadId={selectedThread} />
       </div>
     );
@@ -19,9 +19,9 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) 
 
   // Otherwise show the welcome screen
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col h-full">
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
         {/* Logo */}
         <div className="w-24 h-24 flex items-center justify-center mb-8">
           <img src={aiIcon} alt="AI Icon" className="w-24 h-24" />
@@ -36,11 +36,18 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) 
         </p>
 
         {/* Suggested Prompts Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          {Array.from({ length: 4 }, (_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
+          {[
+            "Show me a pie chart of BSOD crashes over last 6 months for Lenovo segmented by crashtypes.",
+            "Give me a count of devices with Corrupted CSME.",
+            "What events were recorded with High severity level?",
+            "Generate a stacked bar graph showing monthly charging deviations of the devices year to date.",
+            "How many devices does not have TPM Owned?",
+            "Explore more ways to interact with Lenovo IT Assist →"
+          ].map((prompt, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
               <p className="text-sm text-gray-600">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                {prompt}
               </p>
             </div>
           ))}
@@ -48,7 +55,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) 
       </div>
 
       {/* Chat Input Area */}
-      <div className="border-t border-gray-200 p-6 bg-white">
+      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
         <div className="max-w-4xl mx-auto">
           <div className="relative mb-4">
             <input

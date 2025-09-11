@@ -8,6 +8,7 @@ function App() {
   const [currentView, setCurrentView] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedThread, setSelectedThread] = useState<number | null>(null);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
 
   const handleMenuClick = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -20,12 +21,24 @@ function App() {
     if (view !== 'home') {
       setSelectedThread(null);
     }
+    // Clear selected workflow when navigating away from deployment planner
+    if (view !== 'deploymentPlanner') {
+      setSelectedWorkflow(null);
+    }
   };
 
   const handleThreadSelect = (threadId: number) => {
     setSelectedThread(threadId);
     setCurrentView('home');
     setIsMobileMenuOpen(false);
+    setSelectedWorkflow(null);
+  };
+
+  const handleWorkflowSelect = (workflowId: string) => {
+    setSelectedWorkflow(workflowId);
+    setCurrentView('deploymentPlanner');
+    setIsMobileMenuOpen(false);
+    setSelectedThread(null);
   };
 
   return (
@@ -43,11 +56,12 @@ function App() {
           currentView={isMobileMenuOpen ? 'home' : currentView}
           onViewChange={handleViewChange}
           onThreadSelect={handleThreadSelect}
+          onWorkflowSelect={handleWorkflowSelect}
         />
         
         {/* Dynamic Content */}
         {currentView === 'deploymentPlanner' ? (
-          <DeploymentPlannerPage />
+          <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} />
         ) : (
           <CenterContent selectedThread={selectedThread} />
         )}
