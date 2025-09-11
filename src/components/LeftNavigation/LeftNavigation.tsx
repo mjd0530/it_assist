@@ -6,12 +6,13 @@ import type { Assistant } from '../../types';
 interface LeftNavigationProps {
   currentView: string;
   onViewChange: (view: string) => void;
+  onThreadSelect: (threadId: number) => void;
 }
 
-export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange }) => {
+export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect }) => {
   const [assistantsExpanded, setAssistantsExpanded] = useState(true);
   const [threadsExpanded, setThreadsExpanded] = useState(true);
-  const [activeThread, setActiveThread] = useState(0);
+  const [, setActiveThread] = useState(0);
   const [deploymentAssistantExpanded, setDeploymentAssistantExpanded] = useState(true);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [selectedThread, setSelectedThread] = useState<number | null>(0);
@@ -63,7 +64,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
     setSelectedThread(index);
     setSelectedWorkflow(null);
     setActiveThread(index);
-    onViewChange('home');
+    onThreadSelect(index);
   };
 
   const getIcon = (iconName: string) => {
@@ -234,7 +235,13 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
 
           {threadsExpanded && (
             <div className="space-y-1">
-              {Array.from({ length: 5 }, (_, i) => {
+              {[
+                { name: "New thread on 09/08 2:50 PM", date: "09/08 2:50 PM" },
+                { name: "Windows Update deployment strategy", date: "09/07 4:23 PM" },
+                { name: "BIOS update troubleshooting", date: "09/07 11:15 AM" },
+                { name: "Network driver compatibility issues", date: "09/06 3:42 PM" },
+                { name: "Laptop battery optimization settings", date: "09/06 9:30 AM" }
+              ].map((thread, i) => {
                 const isSelected = selectedThread === i;
                 return (
                   <div
@@ -244,14 +251,14 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
                       isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <FileText className={`w-4 h-4 ${
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <FileText className={`w-4 h-4 flex-shrink-0 ${
                         isSelected ? 'text-blue-600' : 'text-gray-500'
                       }`} />
-                      <span className={`text-sm ${
+                      <span className={`text-sm truncate ${
                         isSelected ? 'text-blue-600' : 'text-gray-700'
                       }`}>
-                        New thread on 09/08 2:50 PM
+                        {thread.name}
                       </span>
                     </div>
                     <button className={`opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded ${

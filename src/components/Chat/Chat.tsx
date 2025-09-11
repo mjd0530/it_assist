@@ -2,19 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Copy, Trash2, Bot, User, FileText, Star } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { Message } from '../../types';
-import { mockMessages } from '../../services/mockData';
+import { mockMessages, threadConversations } from '../../services/mockData';
 import { aiService } from '../../services/aiService';
+import aiIcon from '../../assets/ai_icon_color.svg';
 
 interface ChatProps {
   className?: string;
+  threadId?: number;
 }
 
-export const Chat: React.FC<ChatProps> = ({ className }) => {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    return threadConversations[threadId as keyof typeof threadConversations] || mockMessages;
+  });
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,6 +26,11 @@ export const Chat: React.FC<ChatProps> = ({ className }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const threadMessages = threadConversations[threadId as keyof typeof threadConversations] || mockMessages;
+    setMessages(threadMessages);
+  }, [threadId]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -81,35 +89,13 @@ export const Chat: React.FC<ChatProps> = ({ className }) => {
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-white", className)}>
-      {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
-            <Bot className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">AI Assistant</h3>
-            <p className="text-xs text-gray-500">Online</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={clearChat}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="Clear chat"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
+    <div className={cn("flex flex-col h-full w-full bg-white", className)}>
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mb-4">
-              <Bot className="h-8 w-8 text-primary-600" />
+            <div className="w-16 h-16 flex items-center justify-center mb-4">
+              <img src={aiIcon} alt="AI Icon" className="w-16 h-16" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Start a conversation</h3>
             <p className="text-gray-500 max-w-sm">
@@ -126,9 +112,7 @@ export const Chat: React.FC<ChatProps> = ({ className }) => {
               )}
             >
               {message.role === 'assistant' && (
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-white" />
-                </div>
+                <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
               )}
               
               <div className={cn(
@@ -167,9 +151,7 @@ export const Chat: React.FC<ChatProps> = ({ className }) => {
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex space-x-3 animate-fade-in">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <Bot className="h-4 w-4 text-white" />
-            </div>
+            <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
             <div className="bg-gray-100 rounded-2xl px-4 py-3">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>

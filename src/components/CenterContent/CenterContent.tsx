@@ -1,8 +1,23 @@
 import React from 'react';
 import { FileText, Star, Send } from 'lucide-react';
 import aiIcon from '../../assets/ai_icon_color.svg';
+import { Chat } from '../Chat';
 
-export const CenterContent: React.FC = () => {
+interface CenterContentProps {
+  selectedThread?: number | null;
+}
+
+export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) => {
+  // If a thread is selected (and it's not the new thread), show the Chat component
+  if (selectedThread !== null && selectedThread !== undefined && selectedThread !== 0) {
+    return (
+      <div className="flex-1 flex flex-col">
+        <Chat threadId={selectedThread} />
+      </div>
+    );
+  }
+
+  // Otherwise show the welcome screen
   return (
     <div className="flex-1 flex flex-col">
       {/* Main Content Area */}
@@ -33,20 +48,19 @@ export const CenterContent: React.FC = () => {
       </div>
 
       {/* Chat Input Area */}
-      <div className="p-6 border-t border-gray-200 bg-white">
+      <div className="border-t border-gray-200 p-6 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center border border-gray-300 rounded-lg p-2 bg-gray-50">
+          <div className="relative mb-4">
             <input
               type="text"
               placeholder="Ask Lenovo IT Assist a question..."
-              className="flex-1 bg-transparent outline-none text-base text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
             />
-            <button className="ml-2 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-              <Send className="w-5 h-5" />
+            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Send className="w-5 h-5 text-gray-600" />
             </button>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
@@ -60,7 +74,6 @@ export const CenterContent: React.FC = () => {
             </div>
           </div>
 
-          {/* Disclaimer */}
           <p className="text-xs text-gray-500 mt-4">
             Lenovo IT Assist uses AI. Please double-check results.
           </p>

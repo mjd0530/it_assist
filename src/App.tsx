@@ -7,6 +7,7 @@ import { DeploymentPlannerPage } from './components/DeploymentPlannerPage';
 function App() {
   const [currentView, setCurrentView] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedThread, setSelectedThread] = useState<number | null>(null);
 
   const handleMenuClick = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -15,6 +16,16 @@ function App() {
   const handleViewChange = (view: string) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false); // Close mobile menu when navigating
+    // Clear selected thread when navigating away from home
+    if (view !== 'home') {
+      setSelectedThread(null);
+    }
+  };
+
+  const handleThreadSelect = (threadId: number) => {
+    setSelectedThread(threadId);
+    setCurrentView('home');
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -31,13 +42,14 @@ function App() {
         <LeftNavigation 
           currentView={isMobileMenuOpen ? 'home' : currentView}
           onViewChange={handleViewChange}
+          onThreadSelect={handleThreadSelect}
         />
         
         {/* Dynamic Content */}
         {currentView === 'deploymentPlanner' ? (
           <DeploymentPlannerPage />
         ) : (
-          <CenterContent />
+          <CenterContent selectedThread={selectedThread} />
         )}
       </div>
     </div>
