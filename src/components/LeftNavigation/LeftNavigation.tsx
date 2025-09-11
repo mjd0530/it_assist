@@ -6,7 +6,7 @@ import type { Assistant } from '../../types';
 interface LeftNavigationProps {
   currentView: string;
   onViewChange: (view: string) => void;
-  onThreadSelect: (threadId: number) => void;
+  onThreadSelect: (threadId: number, isNew?: boolean) => void;
   onWorkflowSelect: (workflowId: string) => void;
 }
 
@@ -17,6 +17,15 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
   const [deploymentAssistantExpanded, setDeploymentAssistantExpanded] = useState(true);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [selectedThread, setSelectedThread] = useState<number | null>(0);
+  
+  // Dynamic thread list state
+  const [threads, setThreads] = useState([
+    { id: 0, name: "New thread on 09/08 2:50 PM", date: "09/08 2:50 PM" },
+    { id: 1, name: "Windows Update deployment strategy", date: "09/07 4:23 PM" },
+    { id: 2, name: "BIOS update troubleshooting", date: "09/07 11:15 AM" },
+    { id: 3, name: "Network driver compatibility issues", date: "09/06 3:42 PM" },
+    { id: 4, name: "Laptop battery optimization settings", date: "09/06 9:30 AM" }
+  ]);
 
   // Assistant data structure
   const assistants: Assistant[] = [
@@ -65,7 +74,36 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
     setSelectedThread(index);
     setSelectedWorkflow(null);
     setActiveThread(index);
-    onThreadSelect(index);
+    onThreadSelect(index, false); // Pass false to indicate this is an existing thread
+  };
+
+  const handleNewThreadClick = () => {
+    // Create a new thread with current timestamp
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit' 
+    });
+    const timeStr = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    
+    const newThread = {
+      id: Math.max(...threads.map(t => t.id)) + 1, // Generate unique ID
+      name: `New thread on ${dateStr} ${timeStr}`,
+      date: `${dateStr} ${timeStr}`
+    };
+    
+    // Add new thread to the beginning of the list
+    setThreads(prevThreads => [newThread, ...prevThreads]);
+    
+    // Navigate to the new thread
+    setSelectedThread(newThread.id);
+    setSelectedWorkflow(null);
+    setActiveThread(newThread.id);
+    onThreadSelect(newThread.id, true); // Pass true to indicate this is a new thread
   };
 
   const getIcon = (iconName: string) => {
@@ -104,13 +142,16 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
         transition-transform duration-300 ease-in-out
       `}>
       {/* Top section with logo and New button */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <img src={aiIcon} alt="AI Icon" className="w-8 h-8" />
             <span className="text-lg font-semibold text-gray-900">Lenovo IT Assist</span>
           </div>
-          <button className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center space-x-1">
+          <button 
+            onClick={handleNewThreadClick}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center space-x-1"
+          >
             <Plus className="w-4 h-4" />
             <span>New</span>
           </button>
@@ -221,7 +262,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
         </div>
 
         {/* Threads Section */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4">
           <button
             onClick={() => setThreadsExpanded(!threadsExpanded)}
             className="flex items-center justify-between w-full text-left mb-2"
@@ -236,18 +277,12 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
 
           {threadsExpanded && (
             <div className="space-y-1">
-              {[
-                { name: "New thread on 09/08 2:50 PM", date: "09/08 2:50 PM" },
-                { name: "Windows Update deployment strategy", date: "09/07 4:23 PM" },
-                { name: "BIOS update troubleshooting", date: "09/07 11:15 AM" },
-                { name: "Network driver compatibility issues", date: "09/06 3:42 PM" },
-                { name: "Laptop battery optimization settings", date: "09/06 9:30 AM" }
-              ].map((thread, i) => {
-                const isSelected = selectedThread === i;
+              {threads.map((thread) => {
+                const isSelected = selectedThread === thread.id;
                 return (
                   <div
-                    key={i}
-                    onClick={() => handleThreadClick(i)}
+                    key={thread.id}
+                    onClick={() => handleThreadClick(thread.id)}
                     className={`flex items-center justify-between p-2 rounded-lg group cursor-pointer transition-colors ${
                       isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
                     }`}

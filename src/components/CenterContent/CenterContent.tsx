@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FileText, Star, Send } from 'lucide-react';
 import aiIcon from '../../assets/ai_icon_color.svg';
 import { Chat } from '../Chat';
 
 interface CenterContentProps {
   selectedThread?: number | null;
+  isNewThread?: boolean;
 }
 
-export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) => {
-  // If a thread is selected (and it's not the new thread), show the Chat component
-  if (selectedThread !== null && selectedThread !== undefined && selectedThread !== 0) {
+export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input field when component mounts for a new thread
+  useEffect(() => {
+    if (isNewThread || selectedThread === 0 || selectedThread === null) {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [selectedThread, isNewThread]);
+
+  // If a thread is selected and it's not a new thread, show the Chat component
+  if (selectedThread !== null && selectedThread !== undefined && !isNewThread && selectedThread !== 0) {
     return (
       <div className="flex-1 flex flex-col h-full">
         <Chat threadId={selectedThread} />
@@ -59,6 +72,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread }) 
         <div className="max-w-4xl mx-auto">
           <div className="relative mb-4">
             <input
+              ref={inputRef}
               type="text"
               placeholder="Ask Lenovo IT Assist a question..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"

@@ -9,6 +9,7 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedThread, setSelectedThread] = useState<number | null>(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
+  const [isNewThread, setIsNewThread] = useState(false);
 
   const handleMenuClick = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -27,11 +28,12 @@ function App() {
     }
   };
 
-  const handleThreadSelect = (threadId: number) => {
+  const handleThreadSelect = (threadId: number, isNew: boolean = false) => {
     setSelectedThread(threadId);
     setCurrentView('home');
     setIsMobileMenuOpen(false);
     setSelectedWorkflow(null);
+    setIsNewThread(isNew);
   };
 
   const handleWorkflowSelect = (workflowId: string) => {
@@ -63,7 +65,7 @@ function App() {
         {currentView === 'deploymentPlanner' ? (
           <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} />
         ) : (
-          <CenterContent selectedThread={selectedThread} />
+          <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} />
         )}
       </div>
     </div>
