@@ -129,7 +129,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
     // Add new thread to the beginning of the list
     setThreads(prevThreads => [newThread, ...prevThreads]);
     
-    // Navigate to the new thread
+    // Automatically select the new thread and navigate to it
     setSelectedThread(newThread.id);
     setSelectedWorkflow(null);
     setActiveThread(newThread.id);

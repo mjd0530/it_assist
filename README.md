@@ -1,6 +1,6 @@
-# AI Assistant Web App
+# Lenovo IT Assist
 
-A modern, responsive web application for prototyping and testing AI assistant features. Built with React, TypeScript, and Tailwind CSS.
+A modern, responsive web application for IT support and device management. Built with React, TypeScript, and Tailwind CSS, featuring AI-powered chat assistance for Lenovo device troubleshooting and support.
 
 ## Features
 
@@ -11,12 +11,14 @@ A modern, responsive web application for prototyping and testing AI assistant fe
 - Custom color palette with blue/purple accents
 
 ### 💬 AI Chat Interface
-- Real-time chat with message history
+- **Real-time AI responses** with realistic mock data
+- **Thread management** - Create and manage multiple chat threads
+- **IT-focused responses** - Specialized in Lenovo device support
+- **Context-aware assistance** - BSOD analysis, BIOS updates, network issues
 - Message bubbles with user/AI styling
 - Auto-scroll to latest messages
 - Loading states and typing indicators
 - Copy message functionality
-- Clear chat option
 
 ### 🧭 Navigation
 - Collapsible sidebar navigation
@@ -72,6 +74,23 @@ src/
 
 3. **Open your browser:**
    Navigate to `http://localhost:5173`
+
+4. **Start chatting:**
+   - Click "New" to create a new thread
+   - Ask questions about IT support, device issues, or Lenovo products
+   - The AI will provide realistic, context-aware responses
+
+## AI Features
+
+The application includes a sophisticated AI chat system with:
+
+- **Mock AI Responses** (Default) - Works immediately without setup
+- **Real AI Integration** (Optional) - Support for OpenAI and Hugging Face APIs
+- **IT-Specialized Responses** - Tailored for Lenovo device support
+- **Thread Management** - Multiple conversation threads
+- **Realistic Delays** - Simulates real AI response times
+
+See [AI_SETUP.md](./AI_SETUP.md) for detailed AI configuration options.
 
 ## Available Scripts
 

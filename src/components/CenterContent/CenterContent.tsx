@@ -1,7 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { FileText, Star, Send } from 'lucide-react';
 import aiIcon from '../../assets/ai_icon_color.svg';
 import { Chat } from '../Chat';
+import { aiService } from '../../services/aiService';
+import type { Message } from '../../types';
+import { BarChart } from '../Charts/BarChart';
+import { PieChart } from '../Charts/PieChart';
+import { LineChart } from '../Charts/LineChart';
 
 interface CenterContentProps {
   selectedThread?: number | null;
@@ -10,6 +15,9 @@ interface CenterContentProps {
 
 export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   // Focus input field when component mounts for a new thread
   useEffect(() => {
@@ -20,6 +28,138 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
       }, 100);
     }
   }, [selectedThread, isNewThread]);
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue.trim(),
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
+
+    // Generate AI response
+    try {
+      const threadId = selectedThread?.toString() || 'new-thread';
+      const aiResponse = await aiService.generateResponse(inputValue.trim(), threadId);
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Lightweight parser to detect when to render charts from assistant text
+  const renderAssistantContent = (content: string) => {
+    // Fleet Analytics chart - more flexible detection
+    if (content.includes('Enterprise Fleet Analytics Dashboard') || content.includes('Fleet Overview:') || content.includes('Device Distribution:')) {
+      const labels = ['Active', 'Offline', 'Critical Issues'];
+      const active = Math.floor(Math.random() * 10000) + 9000;
+      const offline = Math.floor(Math.random() * 200) + 50;
+      const critical = Math.floor(Math.random() * 50) + 5;
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <BarChart title="Fleet Health" labels={labels} data={[active, offline, critical]} />
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart title="Device Series Distribution" labels={["X1", "T", "E", "P"]} data={[32, 41, 57, 12]} />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    // Compliance chart - more flexible detection
+    if (content.includes('Enterprise Compliance & Governance Analysis') || content.includes('Compliance Status:') || content.includes('Regulatory Compliance Status:')) {
+      const compliant = Math.floor(Math.random() * 80) + 70;
+      const nonCompliant = 100 - compliant;
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart title="Compliance Status" labels={["Compliant", "Non-Compliant"]} data={[compliant, nonCompliant]} colors={["#10b981", "#ef4444"]} />
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <LineChart title="Compliance Trend (Last 6 mo)" labels={["Mar","Apr","May","Jun","Jul","Aug"]} data={[72,76,81,84,88,compliant]} />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    // Software deployment chart - more flexible detection
+    if (content.includes('Enterprise Software Deployment Analysis') || content.includes('Deployment Overview:') || content.includes('Software Inventory:')) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <BarChart title="Deployment Channels" labels={["SCCM","Intune","Manual","Vantage"]} data={[68, 22, 4, 6]} color="#8b5cf6" />
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart title="Success vs Failure" labels={["Success","Failure"]} data={[96,4]} colors={["#3b82f6","#ef4444"]} />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    // Device lifecycle chart
+    if (content.includes('Enterprise Device Lifecycle Management') || content.includes('Asset Health Assessment:')) {
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <BarChart title="Device Age Distribution" labels={["0-1 years", "1-2 years", "2-3 years", "3-4 years", "4+ years"]} data={[25, 35, 20, 15, 5]} color="#10b981" />
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart title="Warranty Status" labels={["Active", "Expiring Soon", "Expired"]} data={[70, 20, 10]} colors={["#3b82f6", "#f59e0b", "#ef4444"]} />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    return <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>;
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   // If a thread is selected and it's not a new thread, show the Chat component
   if (selectedThread !== null && selectedThread !== undefined && !isNewThread && selectedThread !== 0) {
@@ -33,38 +173,92 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
   // Otherwise show the welcome screen
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-0">
-        {/* Logo */}
-        <div className="w-24 h-24 flex items-center justify-center mb-8">
-          <img src={aiIcon} alt="AI Icon" className="w-24 h-24" />
-        </div>
-
-        {/* Welcome Message */}
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-          Hello, how may I assist you today?
-        </h1>
-        <p className="text-base text-gray-600 mb-8">
-          Below are some ideas to get you started.
-        </p>
-
-        {/* Suggested Prompts Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
-          {[
-            "Show me a pie chart of BSOD crashes over last 6 months for Lenovo segmented by crashtypes.",
-            "Give me a count of devices with Corrupted CSME.",
-            "What events were recorded with High severity level?",
-            "Generate a stacked bar graph showing monthly charging deviations of the devices year to date.",
-            "How many devices does not have TPM Owned?",
-            "Explore more ways to interact with Lenovo IT Assist →"
-          ].map((prompt, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-              <p className="text-sm text-gray-600">
-                {prompt}
-              </p>
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            {/* Logo */}
+            <div className="w-24 h-24 flex items-center justify-center mb-8">
+              <img src={aiIcon} alt="AI Icon" className="w-24 h-24" />
             </div>
-          ))}
-        </div>
+
+            {/* Welcome Message */}
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              Hello, how may I assist you today?
+            </h1>
+            <p className="text-base text-gray-600 mb-8">
+              Below are some ideas to get you started.
+            </p>
+
+            {/* Suggested Prompts Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
+              {[
+                "Show me a pie chart of BSOD crashes over last 6 months for Lenovo segmented by crashtypes.",
+                "Give me a count of devices with Corrupted CSME.",
+                "What events were recorded with High severity level?",
+                "Generate a stacked bar graph showing monthly charging deviations of the devices year to date.",
+                "How many devices does not have TPM Owned?",
+                "Explore more ways to interact with Lenovo IT Assist →"
+              ].map((prompt, i) => (
+                <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                  <p className="text-sm text-gray-600">
+                    {prompt}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex space-x-3 ${
+                message.role === 'user' ? "justify-end" : "justify-start"
+              }`}
+            >
+              {message.role === 'assistant' && (
+                <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
+              )}
+              
+              <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                message.role === 'user' 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-gray-100 text-gray-900"
+              }`}>
+                {message.role === 'assistant' ? (
+                  renderAssistantContent(message.content)
+                ) : (
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
+                )}
+                <div className={`flex items-center justify-between mt-2 text-xs ${
+                  message.role === 'user' ? "text-blue-100" : "text-gray-500"
+                }`}>
+                  <span>{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </div>
+
+              {message.role === 'user' && (
+                <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-medium">U</span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="flex space-x-3">
+            <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
+            <div className="bg-gray-100 rounded-2xl px-4 py-3">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chat Input Area */}
@@ -74,10 +268,17 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
             <input
               ref={inputRef}
               type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
               placeholder="Ask Lenovo IT Assist a question..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
             />
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button 
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isLoading}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Send className="w-5 h-5 text-gray-600" />
             </button>
           </div>
