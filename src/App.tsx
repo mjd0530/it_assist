@@ -7,7 +7,7 @@ import { DeploymentPlannerPage } from './components/DeploymentPlannerPage';
 function App() {
   const [currentView, setCurrentView] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedThread, setSelectedThread] = useState<number | null>(null);
+  const [selectedThread, setSelectedThread] = useState<number | null>(0);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [isNewThread, setIsNewThread] = useState(false);
 

@@ -97,6 +97,38 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
       );
     }
 
+    // BSOD pie chart for Lenovo over last 6 months segmented by crash types
+    if (
+      content.includes('Enterprise BSOD Fleet Analysis') ||
+      content.includes('BSOD Analysis Summary')
+    ) {
+      const labels = [
+        'MEMORY_MANAGEMENT',
+        'IRQL_NOT_LESS_OR_EQUAL',
+        'SYSTEM_SERVICE_EXCEPTION',
+        'PAGE_FAULT_IN_NONPAGED_AREA',
+        'KERNEL_SECURITY_CHECK_FAILURE'
+      ];
+      const data = [34, 28, 19, 12, 7];
+      const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart
+                title="Lenovo BSOD Crash Types (Last 6 Months)"
+                labels={labels}
+                data={data}
+                colors={colors}
+              />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
     // Compliance chart - more flexible detection
     if (content.includes('Enterprise Compliance & Governance Analysis') || content.includes('Compliance Status:') || content.includes('Regulatory Compliance Status:')) {
       const compliant = Math.floor(Math.random() * 80) + 70;
@@ -149,6 +181,32 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
             <div className="h-56 w-full overflow-hidden">
               <PieChart title="Warranty Status" labels={["Active", "Expiring Soon", "Expired"]} data={[70, 20, 10]} colors={["#3b82f6", "#f59e0b", "#ef4444"]} />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    // Corrupted CSME chart
+    if (content.includes('Corrupted CSME devices:')) {
+      const labels = ['Corrupted CSME', 'Healthy CSME'];
+      const corruptedCount = 126;
+      const totalDevices = 15234;
+      const healthyCount = totalDevices - corruptedCount;
+      const data = [corruptedCount, healthyCount];
+      const colors = ['#ef4444', '#10b981'];
+
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <BarChart 
+                title="CSME Status Distribution" 
+                labels={labels} 
+                data={data} 
+                colors={colors}
+              />
             </div>
           </div>
           <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>

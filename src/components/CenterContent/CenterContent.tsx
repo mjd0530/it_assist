@@ -29,6 +29,13 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     }
   }, [selectedThread, isNewThread]);
 
+  // Reset messages when switching to a new thread
+  useEffect(() => {
+    if (isNewThread) {
+      setMessages([]);
+    }
+  }, [isNewThread]);
+
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -151,6 +158,64 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
       );
     }
 
+    // BSOD pie chart for Lenovo over last 6 months segmented by crash types
+    if (
+      content.includes('Enterprise BSOD Fleet Analysis') ||
+      content.includes('BSOD Analysis Summary')
+    ) {
+      const labels = [
+        'MEMORY_MANAGEMENT',
+        'IRQL_NOT_LESS_OR_EQUAL',
+        'SYSTEM_SERVICE_EXCEPTION',
+        'PAGE_FAULT_IN_NONPAGED_AREA',
+        'KERNEL_SECURITY_CHECK_FAILURE'
+      ];
+      const data = [34, 28, 19, 12, 7]; // Percent distribution last 6 months
+      const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-56 w-full overflow-hidden">
+              <PieChart
+                title="Lenovo BSOD Crash Types (Last 6 Months)"
+                labels={labels}
+                data={data}
+                colors={colors}
+              />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
+    // Corrupted CSME chart
+    if (content.includes('Corrupted CSME devices:')) {
+      const labels = ['Corrupted CSME', 'Healthy CSME'];
+      const corruptedCount = 126;
+      const totalDevices = 15234;
+      const healthyCount = totalDevices - corruptedCount;
+      const data = [corruptedCount, healthyCount];
+      const colors = ['#ef4444', '#10b981'];
+
+      return (
+        <div className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="h-60 w-full overflow-hidden">
+              <BarChart 
+                title="CSME Status Distribution" 
+                labels={labels} 
+                data={data} 
+                colors={colors}
+              />
+            </div>
+          </div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>
+        </div>
+      );
+    }
+
     return <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>;
   };
 
@@ -158,6 +223,46 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handlePromptClick = async (prompt: string) => {
+    if (isLoading) return;
+    
+    console.log('Prompt clicked:', prompt); // Debug log
+    console.log('Current state:', { isNewThread, selectedThread, messagesLength: messages.length }); // Debug log
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: prompt,
+      role: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      const threadId = selectedThread?.toString() || 'new-thread';
+      const aiResponse = await aiService.generateResponse(prompt, threadId);
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -170,12 +275,15 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     );
   }
 
+  // For new threads, always show the FTU page (even if there are messages)
   // Otherwise show the welcome screen
+  console.log('Rendering CenterContent:', { isNewThread, selectedThread, messagesLength: messages.length }); // Debug log
+  
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-        {messages.length === 0 ? (
+        {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             {/* Logo */}
             <div className="w-24 h-24 flex items-center justify-center mb-8">
@@ -200,15 +308,30 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
                 "How many devices does not have TPM Owned?",
                 "Explore more ways to interact with Lenovo IT Assist →"
               ].map((prompt, i) => (
-                <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-                  <p className="text-sm text-gray-600">
+                <div 
+                  key={i} 
+                  onClick={() => handlePromptClick(prompt)}
+                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all group ${
+                    isLoading 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : 'hover:shadow-md hover:border-blue-300 cursor-pointer'
+                  }`}
+                >
+                  <p className={`text-sm transition-colors ${
+                    isLoading 
+                      ? 'text-gray-400' 
+                      : 'text-gray-600 group-hover:text-gray-900'
+                  }`}>
                     {prompt}
                   </p>
                 </div>
               ))}
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* Show messages when there are messages and we're not showing the welcome screen */}
+        {messages.length > 0 && (
           messages.map((message) => (
             <div
               key={message.id}

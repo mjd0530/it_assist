@@ -16,6 +16,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
   const [, setActiveThread] = useState(0);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [openWorkflowMenuId, setOpenWorkflowMenuId] = useState<string | null>(null);
+  const [isNewSplitOpen, setIsNewSplitOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{
     type: 'thread' | 'workflow';
@@ -30,6 +31,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
       // Close menu if clicking anywhere outside
       setOpenMenuId(null);
       setOpenWorkflowMenuId(null);
+      setIsNewSplitOpen(false);
     };
 
     if (openMenuId !== null || openWorkflowMenuId !== null) {
@@ -41,8 +43,15 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
     };
   }, [openMenuId, openWorkflowMenuId]);
 
+  // Initialize with first thread selected on component mount
+  useEffect(() => {
+    if (selectedThread === 0) {
+      onThreadSelect(0, false);
+    }
+  }, []); // Empty dependency array means this runs only on mount
+
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
-  const [selectedThread, setSelectedThread] = useState<number | null>(null);
+  const [selectedThread, setSelectedThread] = useState<number | null>(0);
   
   // Dynamic thread list state
   const [threads, setThreads] = useState(() => [
@@ -256,13 +265,41 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
             <img src={aiIcon} alt="AI Icon" className="w-8 h-8" />
             <span className="text-lg font-semibold text-gray-900">Lenovo IT Assist</span>
           </div>
-          <button 
-            onClick={handleNewThreadClick}
-            className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center space-x-1"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New</span>
-          </button>
+          <div className="relative">
+            <div className="flex items-stretch rounded-lg overflow-hidden shadow-sm border border-blue-600">
+              <button
+                onClick={handleNewThreadClick}
+                className="bg-blue-600 text-white px-3 py-1.5 text-sm font-medium hover:bg-blue-700 transition-colors flex items-center space-x-1"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsNewSplitOpen(prev => !prev); }}
+                className="bg-blue-600 text-white px-2 py-1.5 text-sm hover:bg-blue-700 border-l border-blue-500"
+                aria-label="Open new menu"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+
+            {isNewSplitOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsNewSplitOpen(false); handleNewThreadClick(); }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  New thread
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsNewSplitOpen(false); handleWorkflowClick('new-workflow'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  New Deployment Assistant
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

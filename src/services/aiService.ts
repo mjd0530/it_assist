@@ -129,6 +129,11 @@ export class AIService {
     const context = this.conversationContext[threadId] || [];
     const isFollowUp = context.length > 1;
     
+    // Explicit deterministic response for Corrupted CSME count
+    if (message.includes('corrupted') && message.includes('csme')) {
+      return this.generateCorruptedCsmeResponse();
+    }
+
     // Generate dynamic data
     const deviceId = this.generateDeviceId();
     const errorCode = this.generateErrorCode();
@@ -296,6 +301,14 @@ export class AIService {
       'Manufacturing'
     ];
     return departments[Math.floor(Math.random() * departments.length)];
+  }
+
+  // Deterministic response for Corrupted CSME query
+  private generateCorruptedCsmeResponse(): string {
+    const totalDevices = 15234;
+    const corruptedCount = 126; // Deterministic demo value
+    const percentage = ((corruptedCount / totalDevices) * 100).toFixed(2);
+    return `Corrupted CSME devices: ${corruptedCount} (${percentage}% of ${totalDevices}).\n\nDetails:\n- Impacted models: ThinkPad T14s, X1 Carbon, E15 (mixed)\n- Severity: High (firmware integrity)\n- Recommended next step: Schedule Intel CSME repair/update tool deployment and verify via post-check.`;
   }
 
   // Dynamic response generators
