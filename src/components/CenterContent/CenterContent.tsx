@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { FileText, Star, Send } from 'lucide-react';
-import aiIcon from '../../assets/ai_icon_color.svg';
+import motoLogo from '../../assets/moto_ai_prc.svg';
 import { Chat } from '../Chat';
 import { aiService } from '../../services/aiService';
 import type { Message } from '../../types';
@@ -287,7 +287,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
           <div className="flex flex-col items-center justify-center h-full text-center">
             {/* Logo */}
             <div className="w-24 h-24 flex items-center justify-center mb-8">
-              <img src={aiIcon} alt="AI Icon" className="w-24 h-24" />
+              <img src={motoLogo} alt="Moto AI Logo" className="w-24 h-24" />
             </div>
 
             {/* Welcome Message */}

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Header } from './components/Header';
 import { LeftNavigation } from './components/LeftNavigation';
 import { CenterContent } from './components/CenterContent';
 import { DeploymentPlannerPage } from './components/DeploymentPlannerPage';
+import { AssistantsPage } from './components/AssistantsPage';
+import { ThreadsPage } from './components/ThreadsPage';
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -11,9 +12,6 @@ function App() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [isNewThread, setIsNewThread] = useState(false);
 
-  const handleMenuClick = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
 
   const handleViewChange = (view: string) => {
     setCurrentView(view);
@@ -45,14 +43,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <Header 
-        onMenuClick={handleMenuClick}
-        isMobileMenuOpen={isMobileMenuOpen}
-      />
-      
       {/* Main Layout */}
-      <div className="flex flex-col lg:flex-row h-screen pt-16">
+      <div className="flex flex-col lg:flex-row h-screen">
         {/* Left Navigation */}
         <LeftNavigation 
           currentView={isMobileMenuOpen ? 'home' : currentView}
@@ -64,6 +56,10 @@ function App() {
         {/* Dynamic Content */}
         {currentView === 'deploymentPlanner' ? (
           <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} />
+        ) : currentView === 'assistants' ? (
+          <AssistantsPage />
+        ) : currentView === 'threads' ? (
+          <ThreadsPage />
         ) : (
           <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} />
         )}

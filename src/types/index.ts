@@ -33,6 +33,7 @@ export interface Workflow {
   id: string;
   name: string;
   icon: string;
+  date?: string;
 }
 
 export interface Assistant {
