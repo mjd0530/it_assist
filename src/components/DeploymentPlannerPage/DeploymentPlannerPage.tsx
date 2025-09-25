@@ -68,7 +68,7 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
   return (
     <div className="flex flex-1 h-full">
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
         {/* Content Area */}
         <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
         {isLoading ? (

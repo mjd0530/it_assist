@@ -269,7 +269,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
   // If a thread is selected and it's not a new thread, show the Chat component
   if (selectedThread !== null && selectedThread !== undefined && !isNewThread && selectedThread !== 0) {
     return (
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
         <Chat threadId={selectedThread} />
       </div>
     );
@@ -280,7 +280,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
   console.log('Rendering CenterContent:', { isNewThread, selectedThread, messagesLength: messages.length }); // Debug log
   
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.length === 0 && (
@@ -291,7 +291,21 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
             </div>
 
             {/* Welcome Message */}
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h1 
+              className="font-semibold mb-2"
+              style={{
+                fontSize: '1.5rem',
+                background: `
+                  linear-gradient(to bottom right, #4625EB 16%, #A500BF 50%) bottom right / 50% 50% no-repeat,
+                  linear-gradient(to bottom left, #4625EB 16%, #A500BF 50%) bottom left / 50% 50% no-repeat,
+                  linear-gradient(to top left, #4625EB 16%, #A500BF 50%) top left / 50% 50% no-repeat,
+                  linear-gradient(to top right, #4625EB 16%, #A500BF 50%) top right / 50% 50% no-repeat
+                `,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}
+            >
               Hello, how may I assist you today?
             </h1>
             <p className="text-base text-gray-600 mb-8">

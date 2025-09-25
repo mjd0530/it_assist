@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
 import QuestionAnswerOutlined from '../../assets/QuestionAnswerOutlined.svg';
 import SquareEditOutline from '../../assets/square-edit-outline.svg';
@@ -8,16 +8,11 @@ interface LeftNavigationProps {
   onViewChange: (view: string) => void;
   onThreadSelect: (threadId: number, isNew?: boolean) => void;
   onWorkflowSelect: (workflowId: string) => void;
+  selectedThread: number | null;
 }
 
-export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect }) => {
-  const [selectedThread, setSelectedThread] = useState<number | null>(0);
+export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect, selectedThread }) => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-
-  // Initialize with first thread selected on component mount
-  useEffect(() => {
-    onThreadSelect(0, false);
-  }, []);
 
   // Thread data
   const threads = [
@@ -25,7 +20,6 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
   ];
 
   const handleThreadClick = (threadId: number) => {
-    setSelectedThread(threadId);
     onThreadSelect(threadId, false);
   };
 
@@ -132,12 +126,16 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
                         <img 
                           src={QuestionAnswerOutlined} 
                           alt="Question Answer" 
-                          className="w-5 h-5" 
-                          style={{ filter: 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)' }}
+                          className={`w-5 h-5 ${isSelected ? 'opacity-100' : 'opacity-60'}`}
+                          style={{ 
+                            filter: isSelected 
+                              ? 'brightness(0) saturate(100%) invert(20%) sepia(100%) saturate(2000%) hue-rotate(240deg) brightness(0.8) contrast(1.2)'
+                              : 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)'
+                          }}
                         />
                         <div>
-                          <div className="text-sm text-gray-700">{thread.name}</div>
-                          <div className="text-xs text-gray-500">{thread.date}</div>
+                          <div className={`text-sm ${isSelected ? 'text-blue-700' : ''}`} style={{ color: isSelected ? undefined : '#171717' }}>{thread.name}</div>
+                          <div className={`text-xs ${isSelected ? 'text-blue-700' : 'text-gray-500'}`}>{thread.date}</div>
                         </div>
                       </div>
                       <button

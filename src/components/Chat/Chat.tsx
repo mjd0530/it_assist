@@ -237,7 +237,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
   };
 
   return (
-    <div className={cn("flex flex-col h-full w-full bg-white", className)}>
+    <div className={cn("flex flex-col h-full w-full", className)} style={{ backgroundColor: '#F8FAFC' }}>
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
         {messages.length === 0 ? (

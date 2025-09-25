@@ -42,7 +42,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Main Layout */}
       <div className="flex flex-col lg:flex-row h-screen">
         {/* Left Navigation */}
@@ -51,6 +51,7 @@ function App() {
           onViewChange={handleViewChange}
           onThreadSelect={handleThreadSelect}
           onWorkflowSelect={handleWorkflowSelect}
+          selectedThread={selectedThread}
         />
         
         {/* Dynamic Content */}

@@ -1,95 +1,138 @@
 import React from 'react';
+import motoLogo from '../../assets/moto_ai_prc.svg';
+import rocketIcon from '../../assets/RocketLaunchOutlined.svg';
 
 export const AssistantsPage: React.FC = () => {
   return (
-    <div className="flex-1 flex flex-col h-full bg-white">
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Assistants</h1>
-            <p className="text-gray-600">Manage and configure your AI assistants for different tasks.</p>
+    <div className="flex-1 flex flex-col h-full overflow-y-auto" style={{ backgroundColor: '#F8FAFC' }}>
+      <div className="flex-1 p-8" style={{ paddingTop: '6rem' }}>
+        <div className="max-w-[640px] mx-auto">
+          {/* Welcome Section */}
+          <div className="text-center mb-12">
+            <div className="flex justify-center mb-6">
+              <img src={motoLogo} alt="IT Assist Logo" className="w-24 h-24" />
+            </div>
+            <h1 
+              className="font-bold mb-4"
+              style={{
+                fontSize: '1.5rem',
+                background: `
+                  linear-gradient(to bottom right, #4625EB 16%, #A500BF 50%) bottom right / 50% 50% no-repeat,
+                  linear-gradient(to bottom left, #4625EB 16%, #A500BF 50%) bottom left / 50% 50% no-repeat,
+                  linear-gradient(to top left, #4625EB 16%, #A500BF 50%) top left / 50% 50% no-repeat,
+                  linear-gradient(to top right, #4625EB 16%, #A500BF 50%) top right / 50% 50% no-repeat
+                `,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}
+            >
+              Welcome to assistants
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto" style={{ fontSize: '1rem' }}>
+              Assistant helps streamline and simplify the rollout of software, updates, and configurations across devices. Below are some prompts to get you started.
+            </p>
+          </div>
+
+          {/* Assistants Header */}
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="font-bold text-gray-900" style={{ fontSize: '1.125rem' }}>Assistants</h2>
+            <button 
+              className="text-white transition-colors font-medium"
+              style={{
+                background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
+                borderRadius: '9999px',
+                fontSize: '0.875rem',
+                padding: '0.5rem 1rem'
+              }}
+            >
+              Create new
+            </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Assistant Cards */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
+          {/* Assistant Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Deployment Assistant */}
+            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <img src={rocketIcon} alt="Rocket" className="w-6 h-6" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Deployment Assistant</h3>
-                  <p className="text-sm text-gray-500">Windows deployment workflows</p>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Deployment Assistant</h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                    (Mobile Device Management) agents for configuring and securing mobile devices.
+                  </p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Automate Windows deployment processes and manage deployment workflows.
-              </p>
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                Configure
-              </button>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            {/* Ticket Assistant */}
+            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Security Assistant</h3>
-                  <p className="text-sm text-gray-500">Security and compliance</p>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Ticket Assistant</h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                    Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...
+                  </p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Monitor security compliance and manage security policies.
-              </p>
-              <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                Configure
-              </button>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            {/* Power Management Assistant */}
+            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Performance Assistant</h3>
-                  <p className="text-sm text-gray-500">System optimization</p>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Power Management Assistant</h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                    Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...
+                  </p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Optimize system performance and monitor resource usage.
-              </p>
-              <button className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
-                Configure
-              </button>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            {/* Application Management Assistant */}
+            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                   </svg>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-                  <p className="text-sm text-gray-500">User administration</p>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Application Management Assistant</h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                    Remote Monitoring and Management agents for MSPs and IT teams.
+                  </p>
                 </div>
               </div>
-              <p className="text-gray-600 text-sm mb-4">
-                Manage user accounts and permissions across the organization.
-              </p>
-              <button className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
-                Configure
-              </button>
+            </div>
+
+            {/* Adaptive Device Configuration Assistant */}
+            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
+              <div className="flex items-start space-x-3">
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Adaptive Device Configuration Assistant</h3>
+                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                    Advanced device configuration and management for adaptive IT environments.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -97,3 +140,5 @@ export const AssistantsPage: React.FC = () => {
     </div>
   );
 };
+
+

@@ -11,7 +11,7 @@ export const ThreadsPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white">
+    <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
