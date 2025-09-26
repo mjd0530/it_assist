@@ -16,12 +16,7 @@ export const AssistantsPage: React.FC = () => {
               className="font-bold mb-4"
               style={{
                 fontSize: '1.5rem',
-                background: `
-                  linear-gradient(to bottom right, #4625EB 16%, #A500BF 50%) bottom right / 50% 50% no-repeat,
-                  linear-gradient(to bottom left, #4625EB 16%, #A500BF 50%) bottom left / 50% 50% no-repeat,
-                  linear-gradient(to top left, #4625EB 16%, #A500BF 50%) top left / 50% 50% no-repeat,
-                  linear-gradient(to top right, #4625EB 16%, #A500BF 50%) top right / 50% 50% no-repeat
-                `,
+                background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'

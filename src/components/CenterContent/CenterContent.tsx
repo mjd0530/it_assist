@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FileText, Star, Send } from 'lucide-react';
-import motoLogo from '../../assets/moto_ai_prc.svg';
+import { Description, Star, Send } from '@mui/icons-material';
+import aiIcon from '../../assets/ai_icon_color.svg';
 import { Chat } from '../Chat';
+import { FirstTimeUse } from '../FirstTimeUse';
 import { aiService } from '../../services/aiService';
 import type { Message } from '../../types';
 import { BarChart } from '../Charts/BarChart';
@@ -207,7 +208,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
                 title="CSME Status Distribution" 
                 labels={labels} 
                 data={data} 
-                colors={colors}
+                color={colors[0]}
               />
             </div>
           </div>
@@ -275,113 +276,56 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     );
   }
 
-  // For new threads, always show the FTU page (even if there are messages)
-  // Otherwise show the welcome screen
-  console.log('Rendering CenterContent:', { isNewThread, selectedThread, messagesLength: messages.length }); // Debug log
-  
+  // For new threads or when no messages, show the FirstTimeUse component
+  if (messages.length === 0) {
+    return (
+      <FirstTimeUse 
+        onPromptClick={handlePromptClick}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // Show messages when there are messages
   return (
     <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            {/* Logo */}
-            <div className="w-24 h-24 flex items-center justify-center mb-8">
-              <img src={motoLogo} alt="Moto AI Logo" className="w-24 h-24" />
-            </div>
-
-            {/* Welcome Message */}
-            <h1 
-              className="font-semibold mb-2"
-              style={{
-                fontSize: '1.5rem',
-                background: `
-                  linear-gradient(to bottom right, #4625EB 16%, #A500BF 50%) bottom right / 50% 50% no-repeat,
-                  linear-gradient(to bottom left, #4625EB 16%, #A500BF 50%) bottom left / 50% 50% no-repeat,
-                  linear-gradient(to top left, #4625EB 16%, #A500BF 50%) top left / 50% 50% no-repeat,
-                  linear-gradient(to top right, #4625EB 16%, #A500BF 50%) top right / 50% 50% no-repeat
-                `,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}
-            >
-              Hello, how may I assist you today?
-            </h1>
-            <p className="text-base text-gray-600 mb-8">
-              Below are some ideas to get you started.
-            </p>
-
-            {/* Suggested Prompts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
-              {[
-                "Show me a pie chart of BSOD crashes over last 6 months for Lenovo segmented by crashtypes.",
-                "Give me a count of devices with Corrupted CSME.",
-                "What events were recorded with High severity level?",
-                "Generate a stacked bar graph showing monthly charging deviations of the devices year to date.",
-                "How many devices does not have TPM Owned?",
-                "Explore more ways to interact with Lenovo IT Assist →"
-              ].map((prompt, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => handlePromptClick(prompt)}
-                  className={`bg-white border border-gray-200 rounded-lg p-4 transition-all group ${
-                    isLoading 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:shadow-md hover:border-blue-300 cursor-pointer'
-                  }`}
-                >
-                  <p className={`text-sm transition-colors ${
-                    isLoading 
-                      ? 'text-gray-400' 
-                      : 'text-gray-600 group-hover:text-gray-900'
-                  }`}>
-                    {prompt}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Show messages when there are messages and we're not showing the welcome screen */}
-        {messages.length > 0 && (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex space-x-3 ${
-                message.role === 'user' ? "justify-end" : "justify-start"
-              }`}
-            >
-              {message.role === 'assistant' && (
-                <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex space-x-3 ${
+              message.role === 'user' ? "justify-end" : "justify-start"
+            }`}
+          >
+            {message.role === 'assistant' && (
+              <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
+            )}
+            
+            <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              message.role === 'user' 
+                ? "bg-blue-600 text-white" 
+                : "bg-gray-100 text-gray-900"
+            }`}>
+              {message.role === 'assistant' ? (
+                renderAssistantContent(message.content)
+              ) : (
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
               )}
-              
-              <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                message.role === 'user' 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-gray-100 text-gray-900"
+              <div className={`flex items-center justify-between mt-2 text-xs ${
+                message.role === 'user' ? "text-blue-100" : "text-gray-500"
               }`}>
-                {message.role === 'assistant' ? (
-                  renderAssistantContent(message.content)
-                ) : (
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
-                )}
-                <div className={`flex items-center justify-between mt-2 text-xs ${
-                  message.role === 'user' ? "text-blue-100" : "text-gray-500"
-                }`}>
-                  <span>{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
+                <span>{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
-
-              {message.role === 'user' && (
-                <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-sm font-medium">U</span>
-                </div>
-              )}
             </div>
-          ))
-        )}
+
+            {message.role === 'user' && (
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-medium">U</span>
+              </div>
+            )}
+          </div>
+        ))}
 
         {/* Loading indicator */}
         {isLoading && (
@@ -398,46 +342,6 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
         )}
       </div>
 
-      {/* Chat Input Area */}
-      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative mb-4">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask Lenovo IT Assist a question..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
-            />
-            <button 
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Send className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm">Explore</span>
-              </button>
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <Star className="w-4 h-4" />
-                <span className="text-sm">Favorite prompts</span>
-              </button>
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-4">
-            Lenovo IT Assist uses AI. Please double-check results.
-          </p>
-        </div>
-      </div>
     </div>
   );
 };

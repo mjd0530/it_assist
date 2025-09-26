@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Copy, Trash2, Bot, User, FileText, Star } from 'lucide-react';
+import { Send, ContentCopy, Person, Description, Star } from '@mui/icons-material';
 import { cn } from '../../utils/cn';
 import type { Message } from '../../types';
 import { mockMessages, threadConversations } from '../../services/mockData';
@@ -205,7 +205,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
                 title="CSME Status Distribution" 
                 labels={labels} 
                 data={data} 
-                colors={colors}
+                color={colors[0]}
               />
             </div>
           </div>
@@ -228,9 +228,6 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     navigator.clipboard.writeText(content);
   };
 
-  const clearChat = () => {
-    setMessages([]);
-  };
 
   const formatTimestamp = (timestamp: Date) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -282,16 +279,16 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
                   <button
                     onClick={() => copyMessage(message.content)}
                     className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
-                    title="Copy message"
+                    title="ContentCopy message"
                   >
-                    <Copy className="h-3 w-3" />
+                    <ContentCopy className="h-3 w-3" />
                   </button>
                 </div>
               </div>
 
               {message.role === 'user' && (
                 <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="h-4 w-4 text-white" />
+                  <Person className="h-4 w-4 text-white" />
                 </div>
               )}
             </div>
@@ -339,7 +336,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <FileText className="w-4 h-4" />
+                <Description className="w-4 h-4" />
                 <span className="text-sm">Explore</span>
               </button>
               <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">

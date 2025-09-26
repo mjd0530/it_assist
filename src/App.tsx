@@ -13,6 +13,7 @@ function App() {
   const [isNewThread, setIsNewThread] = useState(false);
 
 
+
   const handleViewChange = (view: string) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false); // Close mobile menu when navigating
