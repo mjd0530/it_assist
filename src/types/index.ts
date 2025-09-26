@@ -57,3 +57,19 @@ export interface AppState {
   currentChatSession?: ChatSession;
   user?: User;
 }
+
+export interface AIInputFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSend: (message: string, attachments?: File[]) => void;
+  onFileUpload?: (files: File[]) => void;
+  onVoiceRecord?: (isRecording: boolean) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  isLoading?: boolean;
+  autoFocus?: boolean;
+  className?: string;
+  maxHeight?: number;
+  attachments?: File[];
+  onAttachmentsChange?: (attachments: File[]) => void;
+}

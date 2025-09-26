@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
+import { AIInputField } from '../AIInputField';
 
 interface FirstTimeUseProps {
   onPromptClick: (prompt: string) => void;
@@ -56,49 +57,15 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
 
         {/* Input Field */}
         <div className="w-full max-w-2xl mb-8">
-          <div className="bg-white border border-gray-300 rounded-2xl shadow-sm">
-            {/* Help text section */}
-            <div className="px-6 py-4">
-              <div className="text-gray-500 text-base">
-                Ask me anything...
-              </div>
-            </div>
-            
-            {/* Button section */}
-            <div className="relative px-4 py-3">
-              {/* Left Side - Plus Button */}
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <button className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-                  <span className="text-gray-600 text-lg font-medium">+</span>
-                </button>
-              </div>
-              
-              {/* Right Side - Microphone and Send */}
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                <button className="w-8 h-8 hover:bg-gray-100 rounded-full flex items-center justify-center transition-colors">
-                  <span className="text-gray-600 text-lg">🎤</span>
-                </button>
-                <button 
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading}
-                  className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 rounded-full flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                >
-                  <span className="text-white text-lg">✈️</span>
-                </button>
-              </div>
-              
-              {/* Hidden input for functionality */}
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full h-12 px-6 py-3 text-lg bg-transparent focus:outline-none opacity-0"
-                style={{ fontSize: '1.125rem' }}
-              />
-            </div>
-          </div>
+          <AIInputField
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSendMessage}
+            placeholder="Ask me anything..."
+            disabled={isLoading}
+            isLoading={isLoading}
+            autoFocus={true}
+          />
         </div>
 
         {/* Suggested Questions */}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ContentCopy, Person, Description, Star } from '@mui/icons-material';
+import { ContentCopy, Person, Description, Star } from '@mui/icons-material';
 import { cn } from '../../utils/cn';
 import type { Message } from '../../types';
 import { mockMessages, threadConversations } from '../../services/mockData';
@@ -8,6 +8,7 @@ import aiIcon from '../../assets/ai_icon_color.svg';
 import { BarChart } from '../Charts/BarChart';
 import { PieChart } from '../Charts/PieChart';
 import { LineChart } from '../Charts/LineChart';
+import { AIInputField } from '../AIInputField';
 
 interface ChatProps {
   className?: string;
@@ -19,6 +20,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     return threadConversations[threadId as keyof typeof threadConversations] || mockMessages;
   });
   const [inputValue, setInputValue] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,23 +37,24 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     setMessages(threadMessages);
   }, [threadId]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSendMessage = async (message: string, _fileAttachments?: File[]) => {
+    if (!message.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputValue.trim(),
+      content: message,
       role: 'user',
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setAttachments([]);
     setIsLoading(true);
 
     // Generate AI response
     try {
-      const aiResponse = await aiService.generateResponse(inputValue.trim(), threadId.toString());
+      const aiResponse = await aiService.generateResponse(message, threadId.toString());
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiResponse,
@@ -70,6 +73,16 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFileUpload = (files: File[]) => {
+    console.log('Files uploaded:', files);
+    // Handle file upload logic here
+  };
+
+  const handleVoiceRecord = (isRecording: boolean) => {
+    console.log('Voice recording:', isRecording);
+    // Handle voice recording logic here
   };
 
   // Lightweight parser to detect when to render charts from assistant text
@@ -217,12 +230,6 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     return <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>;
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const copyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -315,22 +322,19 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
       {/* Input Area */}
       <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
         <div className="max-w-4xl mx-auto">
-          <div className="relative mb-4">
-            <input
-              type="text"
+          <div className="mb-4">
+            <AIInputField
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onChange={setInputValue}
+              onSend={handleSendMessage}
+              onFileUpload={handleFileUpload}
+              onVoiceRecord={handleVoiceRecord}
               placeholder="Ask Lenovo IT Assist a question..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
+              disabled={isLoading}
+              isLoading={isLoading}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
             />
-            <button 
-              onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Send className="w-5 h-5 text-gray-600" />
-            </button>
           </div>
 
           <div className="flex items-center justify-between">
