@@ -55,6 +55,20 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
     }
   }, [value, maxHeight]);
 
+  // Reset drag state when mouse leaves the window
+  useEffect(() => {
+    const handleMouseLeave = () => {
+      setIsDragOver(false);
+    };
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
+
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -100,7 +114,10 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragOver(false);
+    // Only set isDragOver to false if we're actually leaving the container
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -121,6 +138,7 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
     onAttachmentsChange?.(newAttachments);
   };
 
+
   const canSend = value.trim() || attachments.length > 0;
 
   return (
@@ -140,20 +158,12 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
         className={`
           relative bg-white border rounded-2xl shadow-sm transition-all duration-200
           ${isFocused 
-            ? 'shadow-md ring-2 ring-purple-100' 
+            ? 'shadow-md ring-2 ring-purple-200 border-purple-600' 
             : 'border-gray-300 hover:border-gray-400'
           }
-          ${isDragOver ? 'bg-purple-50' : ''}
+          ${isDragOver ? 'bg-purple-50 border-purple-600' : ''}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-text'}
         `}
-        style={{
-          border: (isFocused || isDragOver)
-            ? '1px solid transparent'
-            : undefined,
-          background: (isFocused || isDragOver)
-            ? 'linear-gradient(white, white) padding-box, linear-gradient(135deg, #4625EB 0%, #A500BF 100%) border-box'
-            : undefined
-        }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
