@@ -61,27 +61,29 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
           />
         </div>
 
-        {/* Suggested Questions */}
-        <div className="w-full max-w-2xl space-y-3">
-          {suggestedPrompts.map((prompt, index) => (
-            <div 
-              key={index}
-              onClick={() => onPromptClick(prompt)}
-              className={`bg-white border border-gray-200 rounded-xl p-4 transition-all cursor-pointer group ${
-                isLoading 
-                  ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:shadow-md hover:border-blue-300'
-              }`}
-            >
-              <p className={`text-sm transition-colors ${
-                isLoading 
-                  ? 'text-gray-400' 
-                  : 'text-gray-700 group-hover:text-gray-900'
-              }`}>
-                {prompt}
-              </p>
-            </div>
-          ))}
+        {/* Suggested Questions - Contained Card List */}
+        <div className="w-full max-w-2xl">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            {suggestedPrompts.map((prompt, index) => (
+              <div 
+                key={index}
+                onClick={() => !isLoading && onPromptClick(prompt)}
+                className={`px-4 py-3 transition-all cursor-pointer group border-b border-gray-100 last:border-b-0 ${
+                  isLoading 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <p className={`text-sm transition-colors ${
+                  isLoading 
+                    ? 'text-gray-400' 
+                    : 'text-gray-700 group-hover:text-gray-900'
+                }`}>
+                  {prompt}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
