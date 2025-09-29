@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
 import { AIInputField } from '../AIInputField';
 
@@ -8,7 +8,6 @@ interface FirstTimeUseProps {
 }
 
 export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoading = false }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
 
   const handleSendMessage = () => {
@@ -17,12 +16,6 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
     setInputValue('');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const suggestedPrompts = [
     "Give me a count of devices with Corrupted Backup",

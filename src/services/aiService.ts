@@ -1,10 +1,7 @@
 // AI service with multiple provider support
 export class AIService {
   private static instance: AIService;
-  private readonly HUGGINGFACE_API_KEY = import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
-  private readonly OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || '';
   private conversationContext: { [threadId: string]: string[] } = {};
-  private deviceData: any = {};
   
   static getInstance(): AIService {
     if (!AIService.instance) {
@@ -39,74 +36,7 @@ export class AIService {
     return this.getDynamicMockResponse(userMessage, threadId);
   }
 
-  private async generateOpenAIResponse(userMessage: string): Promise<string> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are Lenovo IT Assist, a helpful AI assistant specialized in IT support, device management, and technical troubleshooting. Provide clear, concise, and helpful responses.'
-          },
-          {
-            role: 'user',
-            content: userMessage
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  }
-
-  private async generateHuggingFaceResponse(userMessage: string): Promise<string> {
-    // Use a better model for chat responses
-    const API_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-large';
-    
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.HUGGINGFACE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: userMessage,
-        parameters: {
-          max_length: 200,
-          temperature: 0.7,
-          do_sample: true,
-          pad_token_id: 50256,
-        }
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Hugging Face API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    // Handle the response format from Hugging Face
-    if (Array.isArray(data) && data.length > 0) {
-      const generatedText = data[0].generated_text || data[0].text;
-      // Clean up the response by removing the original input if it's included
-      return generatedText.replace(userMessage, '').trim() || 'I apologize, but I could not generate a response.';
-    }
-    
-    return data.generated_text || data.text || 'I apologize, but I could not generate a response.';
-  }
 
   private async getDynamicMockResponse(userMessage: string, threadId: string): Promise<string> {
     // Simulate realistic API delay (1-3 seconds)
@@ -839,7 +769,7 @@ ${outdatedDrivers > 3 ? '4. **Bluetooth**: Intel Bluetooth - Update available\n5
 Would you like me to proceed with the driver updates?`;
   }
 
-  private generateGeneralHelp(deviceId: string, model: string): string {
+  private generateGeneralHelp(_deviceId: string, _model: string): string {
     const helpTopics = [
       'enterprise fleet management',
       'device lifecycle optimization',
@@ -890,15 +820,15 @@ I'm your Lenovo Enterprise IT Assist, specialized in large-scale fleet managemen
 What enterprise IT challenge can I help you solve? I'm ready to assist with ${randomTopic} or any other enterprise IT management needs!`;
   }
 
-  private generateDefaultResponse(userMessage: string, deviceId: string, model: string, isFollowUp: boolean): string {
+  private generateDefaultResponse(userMessage: string, _deviceId: string, _model: string, _isFollowUp: boolean): string {
     const responses = [
       `I understand you're asking about "${userMessage}". Let me help you with that.
 
-**Device Context**: ${deviceId} (${model})
+**Device Context**: ${_deviceId} (${_model})
 **Analysis**: I can assist with various IT support topics including device troubleshooting, performance optimization, security management, and more.
 
 **What I can help with:**
-- Device-specific issues for ${model}
+- Device-specific issues for ${_model}
 - System diagnostics and troubleshooting
 - Performance optimization
 - Security and compliance
@@ -908,8 +838,8 @@ Could you provide more details about what you're trying to accomplish? The more 
 
       `Thanks for your question about "${userMessage}". I'm here to help with your IT support needs.
 
-**Current Device**: ${deviceId} (${model})
-**Status**: ${isFollowUp ? 'Continuing previous conversation' : 'New inquiry'}
+**Current Device**: ${_deviceId} (${_model})
+**Status**: ${_isFollowUp ? 'Continuing previous conversation' : 'New inquiry'}
 
 **My Capabilities:**
 - **Diagnostic Analysis**: System health and performance monitoring
@@ -928,7 +858,7 @@ What specific aspect would you like me to focus on? I'm ready to provide detaile
 
       `I'm ready to help with "${userMessage}". As your Lenovo IT Assist, I can provide comprehensive support.
 
-**Device Information**: ${deviceId} (${model})
+**Device Information**: ${_deviceId} (${_model})
 **Support Level**: Full diagnostic and troubleshooting capabilities
 
 **How I Can Assist:**
@@ -1011,10 +941,9 @@ Would you like me to:
 - Set up automated lifecycle alerts?`;
   }
 
-  private generateFleetAnalytics(deviceId: string, model: string, timestamp: string): string {
+  private generateFleetAnalytics(_deviceId: string, _model: string, timestamp: string): string {
     const fleetStats = this.generateFleetStats();
     const department = this.generateDepartment();
-    const location = this.generateLocation();
     const uptime = Math.floor(Math.random() * 5) + 95; // 95-99%
     const supportTickets = Math.floor(Math.random() * 100) + 50;
     
@@ -1222,505 +1151,6 @@ Would you like me to:
 - Set up automated deployment pipeline?`;
   }
 
-  private getMockResponses(userMessage: string): string[] {
-    const message = userMessage.toLowerCase();
-    
-    // Lenovo IT Support specific responses
-    if (message.includes('bsod') || message.includes('blue screen') || message.includes('crash')) {
-      return [
-        `I can help you analyze BSOD crashes. Based on your query, here's what I found:
-
-## BSOD Analysis Summary
-- **Total BSOD incidents**: 1,247 in the last 6 months
-- **Most common crash types**: 
-  - MEMORY_MANAGEMENT (34%)
-  - IRQL_NOT_LESS_OR_EQUAL (28%)
-  - SYSTEM_SERVICE_EXCEPTION (19%)
-
-## Top Affected Models
-- ThinkPad X1 Carbon (Gen 9): 156 incidents
-- ThinkPad T14s: 134 incidents
-- ThinkPad E15: 98 incidents
-
-## Recommended Actions
-1. Update BIOS to latest version
-2. Run Windows Memory Diagnostic
-3. Check for driver conflicts
-4. Review recent software installations
-
-Would you like me to generate a detailed report for any specific model or time period?`,
-        
-        `BSOD analysis shows interesting patterns. Here's a breakdown:
-
-**Crash Distribution by Month:**
-- January: 189 crashes
-- February: 203 crashes  
-- March: 178 crashes
-- April: 156 crashes
-- May: 134 crashes
-- June: 98 crashes
-
-The downward trend suggests recent driver updates are helping. The most problematic drivers are:
-- Intel Graphics drivers (23% of crashes)
-- Network adapters (18% of crashes)
-- Storage controllers (15% of crashes)
-
-I can help you create an action plan to address the remaining issues.`
-      ];
-    }
-
-    if (message.includes('bios') || message.includes('firmware') || message.includes('update')) {
-      return [
-        `BIOS update information for your Lenovo devices:
-
-## Current BIOS Status
-- **Devices needing updates**: 2,847 out of 15,234 total devices
-- **Critical updates available**: 156 devices
-- **Security patches pending**: 423 devices
-
-## Update Priority Matrix
-**High Priority (Update within 7 days):**
-- ThinkPad X1 series: 89 devices
-- ThinkPad T series: 134 devices
-- ThinkPad P series: 67 devices
-
-**Medium Priority (Update within 30 days):**
-- ThinkPad E series: 234 devices
-- ThinkPad L series: 189 devices
-
-## Recommended Update Strategy
-1. Deploy critical security updates first
-2. Schedule maintenance windows for non-critical updates
-3. Test updates on pilot group before full deployment
-4. Monitor for any post-update issues
-
-Would you like me to generate a deployment schedule?`,
-        
-        `BIOS update analysis shows several opportunities for improvement:
-
-**Update Success Rates:**
-- Automatic updates: 94.2% success rate
-- Manual updates: 97.8% success rate
-- Scheduled updates: 96.1% success rate
-
-**Common Update Issues:**
-- Power interruption during update: 2.3%
-- Incompatible hardware: 1.8%
-- User cancellation: 1.7%
-
-**Best Practices:**
-- Ensure devices are connected to power
-- Close all applications before updating
-- Don't interrupt the update process
-- Verify update completion
-
-I can help you create a comprehensive BIOS update plan.`
-      ];
-    }
-
-    if (message.includes('network') || message.includes('wifi') || message.includes('ethernet')) {
-      return [
-        `Network connectivity analysis for your Lenovo fleet:
-
-## Network Status Overview
-- **Devices with connectivity issues**: 234 out of 15,234
-- **WiFi connection problems**: 156 devices
-- **Ethernet issues**: 78 devices
-
-## Common Network Issues
-**WiFi Problems:**
-- Driver compatibility: 45% of cases
-- Signal strength: 32% of cases
-- Authentication failures: 23% of cases
-
-**Ethernet Issues:**
-- Cable problems: 38% of cases
-- Port failures: 29% of cases
-- Driver issues: 33% of cases
-
-## Resolution Steps
-1. Update network drivers to latest version
-2. Reset network settings
-3. Check physical connections
-4. Verify network configuration
-
-Would you like me to generate a network troubleshooting guide?`,
-        
-        `Network performance analysis reveals some interesting patterns:
-
-**Connection Quality Metrics:**
-- Average WiFi speed: 45.2 Mbps
-- Average Ethernet speed: 89.7 Mbps
-- Connection stability: 94.3%
-
-**Problem Areas:**
-- Conference rooms: 23% of issues
-- Remote locations: 34% of issues
-- Manufacturing floor: 18% of issues
-
-**Recommended Solutions:**
-- Deploy WiFi 6 access points in high-traffic areas
-- Implement network monitoring tools
-- Create network troubleshooting documentation
-- Train IT staff on network diagnostics
-
-I can help you create a network improvement plan.`
-      ];
-    }
-
-    if (message.includes('battery') || message.includes('power') || message.includes('charging')) {
-      return [
-        `Battery and power management analysis:
-
-## Battery Health Overview
-- **Devices with battery issues**: 189 out of 15,234
-- **Battery replacement needed**: 67 devices
-- **Charging problems**: 122 devices
-
-## Battery Performance Metrics
-**Average Battery Life:**
-- ThinkPad X1 Carbon: 8.2 hours
-- ThinkPad T14s: 7.8 hours
-- ThinkPad E15: 6.9 hours
-
-**Common Battery Issues:**
-- Rapid discharge: 34% of cases
-- Won't charge: 28% of cases
-- Battery not detected: 38% of cases
-
-## Optimization Recommendations
-1. Enable power management features
-2. Update battery drivers
-3. Calibrate battery if needed
-4. Check power adapter compatibility
-
-Would you like me to create a battery optimization guide?`,
-        
-        `Power management analysis shows opportunities for improvement:
-
-**Power Consumption Patterns:**
-- Peak usage: 9:00 AM - 11:00 AM
-- Low usage: 6:00 PM - 8:00 AM
-- Average power draw: 45W during active use
-
-**Energy Efficiency Opportunities:**
-- Enable sleep mode: Save 23% energy
-- Optimize display brightness: Save 15% energy
-- Manage background processes: Save 12% energy
-
-**Charging Infrastructure:**
-- USB-C charging stations: 89% utilization
-- Traditional charging: 94% utilization
-- Wireless charging: 67% utilization
-
-I can help you develop a comprehensive power management strategy.`
-      ];
-    }
-
-    if (message.includes('react') || message.includes('typescript')) {
-      return [
-        `Great question about React and TypeScript! Here's a comprehensive response:
-
-## React TypeScript Best Practices
-
-### 1. Component Props
-\`\`\`typescript
-interface ButtonProps {
-  variant: 'primary' | 'secondary';
-  size: 'sm' | 'md' | 'lg';
-  onClick: () => void;
-  children: React.ReactNode;
-}
-
-const Button: React.FC<ButtonProps> = ({ variant, size, onClick, children }) => {
-  return (
-    <button 
-      className={\`btn btn-\${variant} btn-\${size}\`}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-};
-\`\`\`
-
-### 2. Custom Hooks
-\`\`\`typescript
-function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      return initialValue;
-    }
-  });
-
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return [storedValue, setValue] as const;
-}
-\`\`\`
-
-Would you like me to elaborate on any specific aspect?`,
-        `I'd be happy to help with React TypeScript! Here are some key concepts:
-
-## Type Safety
-- Always define interfaces for props
-- Use generic types for reusable components
-- Leverage TypeScript's strict mode
-
-## Performance
-- Use React.memo for expensive components
-- Implement useCallback and useMemo properly
-- Consider code splitting with React.lazy
-
-## Testing
-- Use @testing-library/react with TypeScript
-- Mock components with proper typing
-- Test both happy paths and edge cases
-
-What specific area would you like to explore further?`
-      ];
-    }
-
-    if (message.includes('css') || message.includes('styling')) {
-      return [
-        `CSS and styling questions are my specialty! Here's what I can help with:
-
-## Modern CSS Techniques
-- CSS Grid and Flexbox layouts
-- CSS Custom Properties (variables)
-- CSS-in-JS solutions
-- Tailwind CSS utility classes
-
-## Responsive Design
-- Mobile-first approach
-- Breakpoint strategies
-- Fluid typography
-- Container queries
-
-## Performance
-- Critical CSS
-- CSS optimization
-- Animation performance
-- Bundle size considerations
-
-What specific styling challenge are you facing?`,
-        `Great styling question! Here are some modern approaches:
-
-### CSS Grid Layout
-\`\`\`css
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-\`\`\`
-
-### Flexbox Centering
-\`\`\`css
-.centered {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-\`\`\`
-
-### CSS Custom Properties
-\`\`\`css
-:root {
-  --primary-color: #3b82f6;
-  --secondary-color: #8b5cf6;
-  --spacing-unit: 1rem;
-}
-
-.button {
-  background-color: var(--primary-color);
-  padding: var(--spacing-unit);
-}
-\`\`\`
-
-Would you like me to show more examples?`
-      ];
-    }
-
-    if (message.includes('javascript') || message.includes('js')) {
-      return [
-        `JavaScript is a powerful language! Here are some key concepts:
-
-## Modern JavaScript Features
-- ES6+ syntax (arrow functions, destructuring, modules)
-- Async/await and Promises
-- Array methods (map, filter, reduce)
-- Template literals and string methods
-
-## Best Practices
-- Use const/let instead of var
-- Implement proper error handling
-- Follow functional programming principles
-- Use TypeScript for type safety
-
-## Performance Tips
-- Avoid memory leaks
-- Use debouncing and throttling
-- Implement lazy loading
-- Optimize bundle size
-
-What specific JavaScript topic interests you?`,
-        `JavaScript fundamentals are essential! Here's a quick overview:
-
-### Async Programming
-\`\`\`javascript
-// Promises
-fetch('/api/data')
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error(error));
-
-// Async/Await
-async function fetchData() {
-  try {
-    const response = await fetch('/api/data');
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-\`\`\`
-
-### Array Methods
-\`\`\`javascript
-const numbers = [1, 2, 3, 4, 5];
-
-// Map
-const doubled = numbers.map(n => n * 2);
-
-// Filter
-const evens = numbers.filter(n => n % 2 === 0);
-
-// Reduce
-const sum = numbers.reduce((acc, n) => acc + n, 0);
-\`\`\`
-
-Need help with a specific JavaScript concept?`
-      ];
-    }
-
-    // General IT Support responses
-    if (message.includes('help') || message.includes('support') || message.includes('issue')) {
-      return [
-        `I'm here to help with your IT support needs! As Lenovo IT Assist, I can help you with:
-
-## Device Management
-- **ThinkPad troubleshooting**: Hardware and software issues
-- **BIOS updates**: Firmware management and deployment
-- **Driver issues**: Compatibility and performance problems
-- **System optimization**: Performance tuning and maintenance
-
-## Common Issues I Can Help With
-- Blue screen errors and system crashes
-- Network connectivity problems
-- Battery and power management
-- Software installation and updates
-- Security and compliance
-
-## How to Get the Best Help
-- Be specific about your device model
-- Describe the exact error messages
-- Mention what you've already tried
-- Include any recent changes to your system
-
-What specific issue are you experiencing?`,
-        
-        `I'm ready to assist with your IT support request! Here's how I can help:
-
-## My Capabilities
-- **Diagnostic Analysis**: System health and performance monitoring
-- **Troubleshooting**: Step-by-step problem resolution
-- **Best Practices**: IT management recommendations
-- **Reporting**: Generate detailed analysis reports
-- **Automation**: Suggest automated solutions
-
-## Quick Diagnostics
-Based on your fleet of 15,234 Lenovo devices, I can help with:
-- Identifying patterns in device issues
-- Recommending preventive maintenance
-- Optimizing system performance
-- Managing software deployments
-
-What would you like me to analyze or help you with today?`
-      ];
-    }
-
-    // Default responses for general questions
-    return [
-      `Hello! I'm Lenovo IT Assist, your AI-powered IT support assistant. I'm here to help you with:
-
-## What I Can Do
-- **Device Analysis**: Monitor and analyze your Lenovo device fleet
-- **Troubleshooting**: Help resolve technical issues
-- **Performance Optimization**: Improve system performance
-- **Security Management**: Assist with security and compliance
-- **Reporting**: Generate detailed IT reports and insights
-
-## Popular Topics
-- BSOD crash analysis and prevention
-- BIOS update management
-- Network connectivity issues
-- Battery and power optimization
-- Driver compatibility problems
-
-How can I assist you today? Feel free to ask about any IT-related topic!`,
-      
-      `Welcome to Lenovo IT Assist! I'm designed to help you manage and troubleshoot your IT infrastructure.
-
-## My Specialties
-- **ThinkPad Support**: Comprehensive ThinkPad troubleshooting
-- **Fleet Management**: Monitor and manage multiple devices
-- **Predictive Analytics**: Identify potential issues before they occur
-- **Automated Solutions**: Suggest and implement automated fixes
-- **Performance Monitoring**: Track and optimize device performance
-
-## Getting Started
-You can ask me about:
-- Specific device issues you're experiencing
-- System performance optimization
-- Security and compliance questions
-- Software deployment strategies
-- Hardware troubleshooting
-
-What would you like to explore first?`,
-      
-      `I'm Lenovo IT Assist, ready to help with your IT support needs!
-
-## Quick Stats About Your Environment
-- **Total Devices**: 15,234 Lenovo devices
-- **Active Issues**: 234 devices with current problems
-- **System Health**: 98.5% uptime across the fleet
-- **Recent Updates**: 2,847 devices pending BIOS updates
-
-## How I Can Help
-- Analyze device performance and health
-- Troubleshoot specific technical issues
-- Provide recommendations for improvements
-- Generate reports and insights
-- Suggest automation opportunities
-
-What specific area would you like me to focus on? I'm here to make your IT management easier and more efficient!`
-    ];
-  }
 }
 
 export const aiService = AIService.getInstance();

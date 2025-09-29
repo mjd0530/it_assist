@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Description, Star, Send } from '@mui/icons-material';
 import aiIcon from '../../assets/ai_icon_color.svg';
 import { Chat } from '../Chat';
 import { FirstTimeUse } from '../FirstTimeUse';
@@ -16,7 +15,6 @@ interface CenterContentProps {
 
 export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
@@ -37,43 +35,6 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     }
   }, [isNewThread]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue.trim(),
-      role: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-
-    // Generate AI response
-    try {
-      const threadId = selectedThread?.toString() || 'new-thread';
-      const aiResponse = await aiService.generateResponse(inputValue.trim(), threadId);
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse,
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I encountered an error while processing your request. Please try again.",
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Lightweight parser to detect when to render charts from assistant text
   const renderAssistantContent = (content: string) => {
@@ -220,12 +181,6 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     return <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>;
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const handlePromptClick = async (prompt: string) => {
     if (isLoading) return;
