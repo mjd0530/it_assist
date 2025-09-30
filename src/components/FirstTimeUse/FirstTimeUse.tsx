@@ -11,10 +11,11 @@ import InsertDriveFileOutlined from '@mui/icons-material/InsertDriveFileOutlined
 
 interface FirstTimeUseProps {
   onPromptClick: (prompt: string) => void;
+  onStartDeploymentPlan?: (initialQuery: string) => void;
   isLoading?: boolean;
 }
 
-export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoading = false }) => {
+export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false }) => {
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
@@ -24,7 +25,12 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
-    onPromptClick(inputValue.trim());
+    const trimmed = inputValue.trim();
+    if (selectedAssistant?.key === 'deployment' && onStartDeploymentPlan) {
+      onStartDeploymentPlan(trimmed);
+    } else {
+      onPromptClick(trimmed);
+    }
     setInputValue('');
   };
 
@@ -170,7 +176,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
         </h1>
 
         {/* Input Field */}
-        <div className="w-full max-w-2xl mb-8 relative">
+        <div className={`w-full max-w-2xl mb-8 relative transition-transform duration-500 ease-in-out`}>
           <AIInputField
             ref={inputRef}
             value={inputValue}

@@ -1,37 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, FileText, Star, Send, Copy, User } from 'lucide-react';
-import { SkeletonCard } from '../ShimmerSkeleton/ShimmerSkeleton';
+import { Copy, User, Square } from 'lucide-react';
 import { deploymentConversations } from '../../services/mockData';
 import type { Message } from '../../types';
 import { cn } from '../../utils/cn';
 import aiIcon from '../../assets/ai_icon_color.svg';
+import { AIInputField } from '../AIInputField';
+import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
 
 interface DeploymentPlannerPageProps {
   selectedWorkflow?: string | null;
+  initialQuery?: string;
 }
 
-export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ selectedWorkflow = 'new-workflow' }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [showContent, setShowContent] = useState(false);
+export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ selectedWorkflow = 'new-workflow', initialQuery }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<'idle' | 'confirming' | 'building' | 'complete'>('idle');
+  const [planContent, setPlanContent] = useState<null | { title: string; summary: string; steps: string[] }>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [cancelRequested, setCancelRequested] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>({ key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> });
 
-  useEffect(() => {
-    // Simulate loading delay
-    const loadingTimer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000); // 2 seconds loading time
-
-    // Show content after loading
-    const contentTimer = setTimeout(() => {
-      setShowContent(true);
-    }, 2500);
-
-    return () => {
-      clearTimeout(loadingTimer);
-      clearTimeout(contentTimer);
-    };
-  }, []);
+  // Auto-scroll
 
   useEffect(() => {
     // Load conversation messages for the selected workflow
@@ -44,14 +36,42 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
     scrollToBottom();
   }, [messages]);
 
+  // Simulate staged generation once user submits a deployment query
   useEffect(() => {
-    // Scroll to bottom when content first loads
-    if (showContent) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100); // Small delay to ensure content is rendered
+    if (!isGenerating) return;
+    setLoadingStage('confirming');
+    const t1 = setTimeout(() => {
+      if (cancelRequested) return;
+      setLoadingStage('building');
+    }, 500);
+    const t2 = setTimeout(() => {
+      if (cancelRequested) return;
+      setLoadingStage('complete');
+      setPlanContent({
+        title: 'NA Updates workflow (Draft)',
+        summary:
+          "I'm seeing 32 devices on your fleet with critical BIOS updates pending. These updates are flagged as high priority due to potential stability, security, or compatibility improvements from the vendor.\n\nHere's how I recommend we proceed:",
+        steps: [
+          'Begin with a small batch of devices (e.g., 5–10) to validate the update process and ensure there are no issues.',
+          'Monitor for successful completion and any unexpected behavior post-update.',
+          'If everything looks good, proceed with phased deployment across the remaining devices.',
+          'Confirm all updates are complete and the fleet is running on the latest supported BIOS version.'
+        ],
+      });
+    }, 2500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [isGenerating, cancelRequested]);
+
+  // Auto-start generation when arriving with an initial query
+  useEffect(() => {
+    if (initialQuery && !isGenerating) {
+      setIsGenerating(true);
+      setCancelRequested(false);
     }
-  }, [showContent]);
+  }, [initialQuery, isGenerating]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,249 +91,142 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
       <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
         {/* Content Area */}
         <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
-        {isLoading ? (
-          // Loading Spinner
-          <div className="flex flex-col items-center justify-center space-y-4 p-8 h-full">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-base text-gray-600">Loading deployment planner...</p>
-          </div>
-        ) : showContent ? (
-            // Actual Content (when loaded)
-            <div className="flex-1 overflow-y-auto p-8 min-h-0">
-              <div className="w-full max-w-4xl mx-auto space-y-6 animate-fade-in">
-              {/* Deployment Conversation */}
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex space-x-3 animate-fade-in",
-                      message.role === 'user' ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    {message.role === 'assistant' && (
-                      <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
-                    )}
-                    
-                    <div className={cn(
-                      "max-w-[80%] rounded-2xl px-4 py-3 relative group",
-                      message.role === 'user' 
-                        ? "bg-primary-600 text-white" 
-                        : "bg-gray-100 text-gray-900"
-                    )}>
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {message.content}
-                      </div>
-                      <div className={cn(
-                        "flex items-center justify-between mt-2 text-xs",
-                        message.role === 'user' ? "text-primary-100" : "text-gray-500"
-                      )}>
-                        <span>{formatTimestamp(message.timestamp)}</span>
-                        <button
-                          onClick={() => copyMessage(message.content)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
-                          title="Copy message"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
+          <div className="flex-1 overflow-y-auto p-8 min-h-0">
+            <div className="min-h-full flex flex-col justify-end">
+              <div className="w-full max-w-2xl mx-auto space-y-6 pb-8">
+              {/* Confirmation message */}
+              {isGenerating && (loadingStage === 'confirming' || loadingStage === 'building' || loadingStage === 'complete') && (
+                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]">
+                  Got it. Pulling in all updates scoped to the <strong>NA region</strong> and creating a <strong>draft plan</strong>.
+                </div>
+              )}
 
-                    {message.role === 'user' && (
-                      <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* System Scan Results Card - Only show for new-workflow */}
-              {selectedWorkflow === 'new-workflow' && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">System scan results</h3>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-                      Done
-                    </span>
-                  </div>
-                  <p className="text-base text-gray-600 mb-4">142 Total licensed devices.</p>
-                  
+              {/* Loading skeleton while building */}
+              {isGenerating && loadingStage === 'building' && (
+                <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 relative fade-in-up">
+                  <p className="text-sm text-gray-600 mb-4">Building a draft plan...</p>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Available updates</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-3">
-                        <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">
-                          Critical
-                        </span>
-                        <span className="text-2xl font-bold text-gray-900">42</span>
+                    <div className="skeleton-bar skeleton-shimmer h-6 w-full"></div>
+                    <div className="skeleton-bar skeleton-shimmer h-6 w-3/5"></div>
+                    <div className="skeleton-bar skeleton-shimmer h-6 w-4/5"></div>
+                  </div>
+                  <button
+                    className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                    aria-label="Stop building plan"
+                    onClick={() => {
+                      setCancelRequested(true);
+                      setIsGenerating(false);
+                      setLoadingStage('idle');
+                      setPlanContent(null);
+                    }}
+                  >
+                    <Square className="w-4 h-4 text-gray-700" />
+                  </button>
+                </div>
+              )}
+
+              {/* Loaded draft plan */}
+              {isGenerating && loadingStage === 'complete' && planContent && (
+                <div className="bg-white rounded-2xl shadow-sm p-7 border border-gray-200 fade-in-up">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{planContent.title}</h3>
+                  <div className="text-[15px] leading-6 text-gray-700 whitespace-pre-wrap mb-4">{planContent.summary}</div>
+                  <div className="space-y-3">
+                    {planContent.steps.map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-3">
+                        <span className="font-bold text-gray-900">Step {idx + 1}:</span>
+                        <p className="text-gray-700 text-[15px] leading-6">{step}</p>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        (impacts 48.83% of total devices)
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-3">
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
-                          Recommended
-                        </span>
-                        <span className="text-2xl font-bold text-gray-900">87</span>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        (impacts 72.76% of total devices)
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-center space-x-3">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                          Optional
-                        </span>
-                        <span className="text-2xl font-bold text-gray-900">114</span>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        (impacts 27.35% of total devices)
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
+
+              {/* AI follow-up */}
+              {isGenerating && loadingStage === 'complete' && (
+                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]" style={{ animationDelay: '300ms' }}>
+                  Would you like to proceed with the deployment plan or make any changes?
+                </div>
+              )}
+
+              {/* Unified input within content column */}
+              <div className="mt-4">
+                <AIInputField
+                  value={inputValue}
+                  onChange={setInputValue}
+                  onSend={(message) => {
+                    if (!message.trim()) return;
+                    setIsGenerating(true);
+                    setCancelRequested(false);
+                    setAttachments([]);
+                  }}
+                  placeholder="Ask me anything..."
+                  disabled={false}
+                  isLoading={isGenerating && loadingStage !== 'complete'}
+                  attachments={attachments}
+                  onAttachmentsChange={setAttachments}
+                  selectedAssistant={selectedAssistant}
+                  onClearAssistant={() => setSelectedAssistant(null)}
+                />
               </div>
-            </div>
-          ) : null}
-        </div>
 
-        {/* Bottom Chat Input Area */}
-        <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
-          <div className="max-w-4xl mx-auto">
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Ask Lenovo IT Assist a question..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
-              />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Send className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
+              {/* Conversation history (hidden during generation flow) */}
+              {!isGenerating && (
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={cn(
+                        "flex space-x-3 animate-fade-in",
+                        message.role === 'user' ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      {message.role === 'assistant' && (
+                        <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
+                      )}
+                      
+                      <div className={cn(
+                        "max-w-[80%] rounded-2xl px-4 py-3 relative group",
+                        message.role === 'user' 
+                          ? "bg-primary-600 text-white" 
+                          : "bg-gray-100 text-gray-900"
+                      )}>
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                          {message.content}
+                        </div>
+                        <div className={cn(
+                          "flex items-center justify-between mt-2 text-xs",
+                          message.role === 'user' ? "text-primary-100" : "text-gray-500"
+                        )}>
+                          <span>{formatTimestamp(message.timestamp)}</span>
+                          <button
+                            onClick={() => copyMessage(message.content)}
+                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
+                            title="Copy message"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
-                  <FileText className="w-4 h-4" />
-                <span className="text-sm">Explore</span>
-              </button>
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <Star className="w-4 h-4" />
-                <span className="text-sm">Favorite prompts</span>
-              </button>
+                      {message.role === 'user' && (
+                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
             </div>
           </div>
-
-          <p className="text-xs text-gray-500 mt-4">
-            Lenovo IT Assist uses AI. Please double-check results.
-          </p>
-          </div>
         </div>
+        </div>
+
+        {/* Input moved into content column above; bottom bar removed */}
       </div>
 
-      {/* Right Panel */}
-      <div className="w-full lg:w-[480px] bg-white border-l border-gray-200 flex flex-col h-full">
-        <div className="p-6 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Deployment Planner</h2>
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
-              <Play className="w-4 h-4 mr-2" />
-              Start deployment
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 p-6 overflow-y-auto min-h-0">
-          {isLoading ? (
-            // Shimmer Skeleton Loaders
-            <div className="space-y-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="border border-gray-200 rounded-lg p-4">
-                  <SkeletonCard />
-                </div>
-              ))}
-            </div>
-          ) : showContent ? (
-            // Actual Deployment Stages
-            <div className="space-y-6 animate-fade-in">
-              {/* Stage 1 */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Stage 1: Critical Updates Assessment</h3>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    Queued
-                  </span>
-                </div>
-                <ul className="space-y-2 ml-4">
-                  <li className="text-sm text-gray-600">• Start system scan</li>
-                </ul>
-              </div>
-
-              {/* Stage 2 */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Stage 2: Critical Updates Assessment</h3>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    Queued
-                  </span>
-                </div>
-                <ul className="space-y-2 ml-4">
-                  <li className="text-sm text-gray-600">• Fetch all critical updates that are not tested</li>
-                  <li className="text-sm text-gray-600">• Create test batch with 10% requiring reboot and 10% not requiring reboot</li>
-                  <li className="text-sm text-gray-600">• Start test updates not requiring reboot immediately</li>
-                  <li className="text-sm text-gray-600">• Schedule test updates requiring reboot for deployment at 8:00 PM</li>
-                  <li className="text-sm text-gray-600">• Fetch all critical updates that are allowed to deploy</li>
-                  <li className="text-sm text-gray-600">• Start updates not requiring reboot immediately</li>
-                  <li className="text-sm text-gray-600">• Schedule updates requiring reboot for deployment at 8:00 PM</li>
-                </ul>
-              </div>
-
-              {/* Stage 3 */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Stage 3: Recommended Updates Assessment</h3>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    Queued
-                  </span>
-                </div>
-                <ul className="space-y-2 ml-4">
-                  <li className="text-sm text-gray-600">• Fetch all recommended updates that are not tested</li>
-                  <li className="text-sm text-gray-600">• Create test batch with 10% requiring reboot and 10% not requiring reboot</li>
-                  <li className="text-sm text-gray-600">• Start test updates not requiring reboot immediately</li>
-                  <li className="text-sm text-gray-600">• Schedule test updates requiring reboot for deployment at 8:00 PM</li>
-                  <li className="text-sm text-gray-600">• Fetch all recommended updates that are allowed to deploy</li>
-                  <li className="text-sm text-gray-600">• Start updates not requiring reboot immediately</li>
-                  <li className="text-sm text-gray-600">• Schedule updates requiring reboot for deployment at 8:00 PM</li>
-                </ul>
-              </div>
-
-              {/* Stage 4 */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Stage 4: Optional Updates Assessment</h3>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    Queued
-                  </span>
-                </div>
-                <ul className="space-y-2 ml-4">
-                  <li className="text-sm text-gray-600">• Fetch all optional updates that are not tested</li>
-                </ul>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      {/* Right Panel removed per design */}
     </div>
   );
 };
