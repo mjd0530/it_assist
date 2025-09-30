@@ -17,6 +17,7 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'idle' | 'confirming' | 'building' | 'complete'>('idle');
   const [accordionStart, setAccordionStart] = useState(false);
+  const [accordionCompleted, setAccordionCompleted] = useState(false);
   const [planContent, setPlanContent] = useState<null | { title: string; summary: string; steps: string[] }>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -73,6 +74,13 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
     scrollToBottom();
   }, [messages]);
 
+  // Ensure completion message is visible above sticky input
+  useEffect(() => {
+    if (accordionCompleted) {
+      scrollToBottom();
+    }
+  }, [accordionCompleted]);
+
   // Simulate staged generation once user submits a deployment query
   useEffect(() => {
     if (!isGenerating) return;
@@ -124,7 +132,7 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
       <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
         {/* Content Area */}
         <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
-          <div className="flex-1 overflow-y-auto p-8 min-h-0">
+          <div className="flex-1 overflow-y-auto p-8 pb-8 min-h-0">
             <div className="min-h-full flex flex-col justify-end">
               <div className="w-full max-w-2xl mx-auto space-y-6 pb-8">
               {/* Confirmation message */}
@@ -161,14 +169,22 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
               {/* Loaded draft plan */}
               {isGenerating && loadingStage === 'complete' && planContent && (
                 <div className="bg-white rounded-2xl shadow-sm p-7 border border-gray-200 fade-in-up">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{planContent.title}</h3>
-                  <div className="text-[15px] leading-6 text-gray-700 whitespace-pre-wrap mb-4">{planContent.summary}</div>
-                  <div className="space-y-3">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{planContent.title}</h3>
+                  <div className="text-[15px] leading-6 text-gray-700 mb-4">
+                    {planContent.summary.split('\n\n').map((para, i) => {
+                      const withEmphasis = para
+                        .replace(/(\d+\s+devices)/i, '<strong>$1</strong>')
+                        .replace(/(critical\s+BIOS\s+updates)/i, '<strong>$1</strong>');
+                      return (
+                        <p key={i} className="mb-3 last:mb-0" dangerouslySetInnerHTML={{ __html: withEmphasis }} />
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-4">
                     {planContent.steps.map((step, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <span className="font-bold text-gray-900">Step {idx + 1}:</span>
-                        <p className="text-gray-700 text-[15px] leading-6">{step}</p>
-                      </div>
+                      <p key={idx} className="text-gray-700 text-[15px] leading-6">
+                        <span className="font-bold text-gray-900">Step {idx + 1}:</span> {step}
+                      </p>
                     ))}
                   </div>
                 </div>
@@ -215,19 +231,18 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                 <div className="fade-in-up" style={{ animationDelay: '150ms' }}>
                   <DeploymentAccordion
                     start={accordionStart}
-                    totalDurationMs={5 * 60 * 1000}
+                    totalDurationMs={60 * 1000}
                     onComplete={() => {
-                      setMessages(prev => ([
-                        ...prev,
-                        {
-                          id: (Date.now() + 2).toString(),
-                          role: 'assistant',
-                          content: 'Deployment plan completed successfully. I\'ll continue monitoring and let you know if anything requires attention.',
-                          timestamp: new Date(),
-                        } as Message,
-                      ]));
+                      setAccordionCompleted(true);
                     }}
                   />
+                </div>
+              )}
+
+              {/* Completion message positioned below accordion */}
+              {accordionCompleted && (
+                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]" style={{ animationDelay: '150ms' }}>
+                  Deployment plan completed successfully. I will continue monitoring and let you know if anything requires attention.
                 </div>
               )}
 
@@ -247,6 +262,7 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                         timestamp: new Date(),
                       };
                       setMessages(prev => ([...prev, userMsg]));
+                      setAccordionCompleted(false);
                       setAccordionStart(true);
                       setMessages(prev => ([
                         ...prev,

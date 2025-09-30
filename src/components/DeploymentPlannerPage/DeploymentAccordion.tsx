@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 
 interface DeploymentAccordionProps {
@@ -21,11 +21,12 @@ const STAGE_TITLES = [
 
 export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
   start = false,
-  totalDurationMs = 5 * 60 * 1000,
+  totalDurationMs = 60 * 1000,
   onComplete,
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(0);
   const [progressMs, setProgressMs] = useState(0);
+  const hasCompletedRef = useRef(false);
 
   const Spinner = () => (
     <span
@@ -70,12 +71,17 @@ export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
     if (!start) return;
     setExpandedIndex(0);
     setProgressMs(0);
+    // Reset completion guard when a new run starts
+    hasCompletedRef.current = false;
   }, [start]);
 
   useEffect(() => {
     if (!start) return;
     if (progressMs >= totalDurationMs) {
-      onComplete?.();
+      if (!hasCompletedRef.current) {
+        hasCompletedRef.current = true;
+        onComplete?.();
+      }
       return;
     }
 
