@@ -297,17 +297,7 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
         </div>
       </div>
 
-      {/* Loading indicator */}
-      {isLoading && (
-        <div className="flex items-center justify-center mt-3">
-          <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-          </div>
-          <span className="ml-2 text-sm text-gray-500">AI is thinking...</span>
-        </div>
-      )}
+      {/* Loading indicator intentionally removed for planner UX */}
     </div>
   );
 });
