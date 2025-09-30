@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, User, Square } from 'lucide-react';
-import { deploymentConversations } from '../../services/mockData';
+import { Copy, Square } from 'lucide-react';
+// Removed seeded deployment conversations to keep the planner clean
 import type { Message } from '../../types';
 import { cn } from '../../utils/cn';
-import aiIcon from '../../assets/ai_icon_color.svg';
+// Removed avatars for a cleaner message style
 import { AIInputField } from '../AIInputField';
+import { DeploymentAccordion } from './DeploymentAccordion';
 import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
 
 interface DeploymentPlannerPageProps {
@@ -15,6 +16,7 @@ interface DeploymentPlannerPageProps {
 export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ selectedWorkflow = 'new-workflow', initialQuery }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingStage, setLoadingStage] = useState<'idle' | 'confirming' | 'building' | 'complete'>('idle');
+  const [accordionStart, setAccordionStart] = useState(false);
   const [planContent, setPlanContent] = useState<null | { title: string; summary: string; steps: string[] }>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -23,13 +25,48 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
   const [attachments, setAttachments] = useState<File[]>([]);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>({ key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> });
 
+  const isConfirmation = (text: string) => {
+    const normalized = text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const words = new Set(normalized.split(' '));
+    const singleWordSignals = [
+      'yes',
+      'y',
+      'ok',
+      'okay',
+      'sure',
+      'proceed',
+      'continue',
+      'start',
+      'begin',
+      'confirm',
+      'affirmative',
+      'yep',
+      'yeah',
+    ];
+    if (singleWordSignals.some(w => words.has(w))) return true;
+    const phraseSignals = [
+      'go ahead',
+      "let's go",
+      'lets go',
+      'do it',
+      'run it',
+      'start deployment',
+      'start the deployment',
+      'please proceed',
+      'please continue',
+    ];
+    return phraseSignals.some(p => normalized.includes(p));
+  };
+
   // Auto-scroll
 
   useEffect(() => {
-    // Load conversation messages for the selected workflow
-    if (selectedWorkflow && deploymentConversations[selectedWorkflow]) {
-      setMessages(deploymentConversations[selectedWorkflow]);
-    }
+    // Reset messages when switching workflows
+    setMessages([]);
   }, [selectedWorkflow]);
 
   useEffect(() => {
@@ -148,76 +185,100 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                 </div>
               )}
 
-              {/* Unified input within content column */}
+              {/* Conversation history */}
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={cn(
+                      "flex space-x-3 animate-fade-in",
+                      message.role === 'user' ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    
+                    <div className={cn(
+                      "max-w-[80%] rounded-2xl px-4 py-3 relative group",
+                      message.role === 'user' 
+                        ? "bg-primary-600 text-white" 
+                        : "bg-gray-100 text-gray-900"
+                    )}>
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {message.content}
+                      </div>
+                      <div className={cn(
+                        "flex items-center justify-between mt-2 text-xs",
+                        message.role === 'user' ? "text-primary-100" : "text-gray-500"
+                      )}>
+                        <span>{formatTimestamp(message.timestamp)}</span>
+                        <button
+                          onClick={() => copyMessage(message.content)}
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
+                          title="Copy message"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Deployment Accordion (starts after user confirms) */}
+              {accordionStart && (
+                <div className="fade-in-up" style={{ animationDelay: '150ms' }}>
+                  <DeploymentAccordion
+                    start={accordionStart}
+                    totalDurationMs={5 * 60 * 1000}
+                  />
+                </div>
+              )}
+
+              {/* Unified input at the bottom */}
               <div className="mt-4">
                 <AIInputField
                   value={inputValue}
                   onChange={setInputValue}
                   onSend={(message) => {
                     if (!message.trim()) return;
-                    setIsGenerating(true);
-                    setCancelRequested(false);
+                    // If user confirms proceeding, show user's confirmation and start accordion
+                    if (isConfirmation(message)) {
+                      const userMsg: Message = {
+                        id: Date.now().toString(),
+                        role: 'user',
+                        content: message,
+                        timestamp: new Date(),
+                      };
+                      setMessages(prev => ([...prev, userMsg]));
+                      setAccordionStart(true);
+                      setMessages(prev => ([
+                        ...prev,
+                        {
+                          id: (Date.now() + 1).toString(),
+                          role: 'assistant',
+                          content: 'Deployment plan started. I will keep you posted with any updates.',
+                          timestamp: new Date(),
+                        } as Message,
+                      ]));
+                    } else {
+                      // Do not append user/assistant messages for non-confirmation inputs; only drive the draft flow
+                      setIsGenerating(true);
+                      setCancelRequested(false);
+                    }
                     setAttachments([]);
+                    setInputValue('');
                   }}
                   placeholder="Ask me anything..."
                   disabled={false}
-                  isLoading={isGenerating && loadingStage !== 'complete'}
+                  isLoading={false}
                   attachments={attachments}
                   onAttachmentsChange={setAttachments}
                   selectedAssistant={selectedAssistant}
                   onClearAssistant={() => setSelectedAssistant(null)}
                 />
               </div>
-
-              {/* Conversation history (hidden during generation flow) */}
-              {!isGenerating && (
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        "flex space-x-3 animate-fade-in",
-                        message.role === 'user' ? "justify-end" : "justify-start"
-                      )}
-                    >
-                      {message.role === 'assistant' && (
-                        <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
-                      )}
-                      
-                      <div className={cn(
-                        "max-w-[80%] rounded-2xl px-4 py-3 relative group",
-                        message.role === 'user' 
-                          ? "bg-primary-600 text-white" 
-                          : "bg-gray-100 text-gray-900"
-                      )}>
-                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                          {message.content}
-                        </div>
-                        <div className={cn(
-                          "flex items-center justify-between mt-2 text-xs",
-                          message.role === 'user' ? "text-primary-100" : "text-gray-500"
-                        )}>
-                          <span>{formatTimestamp(message.timestamp)}</span>
-                          <button
-                            onClick={() => copyMessage(message.content)}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
-                            title="Copy message"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {message.role === 'user' && (
-                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
             </div>
           </div>
         </div>
