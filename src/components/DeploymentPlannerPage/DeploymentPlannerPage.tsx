@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, Square } from 'lucide-react';
+import { Square } from 'lucide-react';
 // Removed seeded deployment conversations to keep the planner clean
 import type { Message } from '../../types';
 import { cn } from '../../utils/cn';
@@ -114,13 +114,9 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const copyMessage = (content: string) => {
-    navigator.clipboard.writeText(content);
-  };
+  
 
-  const formatTimestamp = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  
 
   return (
     <div className="flex flex-1 h-full">
@@ -199,25 +195,13 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                     <div className={cn(
                       "max-w-[80%] rounded-2xl px-4 py-3 relative group",
                       message.role === 'user' 
-                        ? "bg-primary-600 text-white" 
-                        : "bg-gray-100 text-gray-900"
+                        ? "bg-white text-gray-900 border border-gray-200" 
+                        : "bg-secondary-50 text-secondary-900 border border-secondary-200"
                     )}>
                       <div className="whitespace-pre-wrap text-sm leading-relaxed">
                         {message.content}
                       </div>
-                      <div className={cn(
-                        "flex items-center justify-between mt-2 text-xs",
-                        message.role === 'user' ? "text-primary-100" : "text-gray-500"
-                      )}>
-                        <span>{formatTimestamp(message.timestamp)}</span>
-                        <button
-                          onClick={() => copyMessage(message.content)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
-                          title="Copy message"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </button>
-                      </div>
+                      
                     </div>
 
                     
@@ -232,12 +216,23 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                   <DeploymentAccordion
                     start={accordionStart}
                     totalDurationMs={5 * 60 * 1000}
+                    onComplete={() => {
+                      setMessages(prev => ([
+                        ...prev,
+                        {
+                          id: (Date.now() + 2).toString(),
+                          role: 'assistant',
+                          content: 'Deployment plan completed successfully. I\'ll continue monitoring and let you know if anything requires attention.',
+                          timestamp: new Date(),
+                        } as Message,
+                      ]));
+                    }}
                   />
                 </div>
               )}
 
               {/* Unified input at the bottom */}
-              <div className="mt-4">
+              <div className="mt-4 sticky bottom-8">
                 <AIInputField
                   value={inputValue}
                   onChange={setInputValue}

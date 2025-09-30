@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 
 interface DeploymentAccordionProps {
   /** If true, the accordion begins simulating progress immediately */
@@ -25,6 +26,14 @@ export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(0);
   const [progressMs, setProgressMs] = useState(0);
+
+  const Spinner = () => (
+    <span
+      className="inline-block w-5 h-5 rounded-full border-2 border-secondary-200 border-t-secondary-500 animate-spin"
+      aria-label="Loading"
+      role="status"
+    />
+  );
 
   const stageDurations = useMemo(() => {
     // Evenly split total time across stages
@@ -86,12 +95,12 @@ export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
 
   const renderDot = (status: StageStatus) => {
     if (status === 'complete') {
-      return <span className="w-3 h-3 rounded-full bg-green-500 inline-block"></span>;
+      return <CheckCircle fontSize="small" className="text-green-500" />;
     }
     if (status === 'in_progress') {
-      return <span className="w-3 h-3 rounded-full bg-blue-500 animate-pulse inline-block"></span>;
+      return <Spinner />;
     }
-    return <span className="w-3 h-3 rounded-full bg-gray-300 inline-block"></span>;
+    return <span className="w-3 h-3 rounded-full bg-gray-200 inline-block"></span>;
   };
 
   return (

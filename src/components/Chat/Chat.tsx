@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ContentCopy, Person, Description, Star } from '@mui/icons-material';
+import { Person, Description, Star } from '@mui/icons-material';
 import { cn } from '../../utils/cn';
 import type { Message } from '../../types';
 import { mockMessages, threadConversations } from '../../services/mockData';
@@ -230,15 +230,8 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
     return <div className="whitespace-pre-wrap text-sm leading-relaxed">{content}</div>;
   };
 
-
-  const copyMessage = (content: string) => {
-    navigator.clipboard.writeText(content);
-  };
-
-
-  const formatTimestamp = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  
+  
 
   return (
     <div className={cn("flex flex-col h-full w-full", className)} style={{ backgroundColor: '#F8FAFC' }}>
@@ -270,27 +263,15 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
               <div className={cn(
                 "max-w-[80%] rounded-2xl px-4 py-3 relative group",
                 message.role === 'user' 
-                  ? "bg-primary-600 text-white" 
-                  : "bg-gray-100 text-gray-900"
+                  ? "bg-white text-gray-900 border border-gray-200" 
+                  : "bg-secondary-50 text-secondary-900 border border-secondary-200"
               )}>
                 {message.role === 'assistant' ? (
                   renderAssistantContent(message.content)
                 ) : (
                   <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
                 )}
-                <div className={cn(
-                  "flex items-center justify-between mt-2 text-xs",
-                  message.role === 'user' ? "text-primary-100" : "text-gray-500"
-                )}>
-                  <span>{formatTimestamp(message.timestamp)}</span>
-                  <button
-                    onClick={() => copyMessage(message.content)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/20 rounded transition-all duration-200"
-                    title="ContentCopy message"
-                  >
-                    <ContentCopy className="h-3 w-3" />
-                  </button>
-                </div>
+                
               </div>
 
               {message.role === 'user' && (
@@ -306,11 +287,11 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
         {isLoading && (
           <div className="flex space-x-3 animate-fade-in">
             <img src={aiIcon} alt="AI Icon" className="w-8 h-8 flex-shrink-0" />
-            <div className="bg-gray-100 rounded-2xl px-4 py-3">
+            <div className="bg-secondary-50 border border-secondary-200 rounded-2xl px-4 py-3">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="w-2 h-2 bg-secondary-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-secondary-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-secondary-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           </div>
@@ -320,7 +301,7 @@ export const Chat: React.FC<ChatProps> = ({ className, threadId = 0 }) => {
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
+      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0 sticky bottom-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <AIInputField
