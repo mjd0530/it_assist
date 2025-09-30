@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
 import { AIInputField } from '../AIInputField';
+import type { AIInputFieldHandle } from '../AIInputField';
 import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined';
 import PowerOutlined from '@mui/icons-material/PowerOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
@@ -19,6 +20,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<AIInputFieldHandle>(null);
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
@@ -47,13 +49,71 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
 
   // Prompts by assistant
   const defaultPrompts = suggestedPrompts;
-  const deploymentPrompts = [
-    "Roll out driver updates gradually across all US-based PCs",
-    "Schedule a test batch for Windows security updates this week",
-    "Help me deploy all BIOS-related updates that don't require a reboot",
-  ];
+  const promptsByAssistant: Record<string, string[]> = {
+    ticket: [
+      'Create a high-priority ticket for a BSOD incident on Finance laptop',
+      'Summarize top recurring issues this week and link related tickets',
+      'Assign a hardware replacement ticket to the Field Ops queue',
+      'Escalate open network tickets older than 48 hours',
+      'Auto-close resolved tickets after confirmation from user',
+    ],
+    power: [
+      'Generate a power usage report for remote workers last 7 days',
+      'Identify devices with abnormal battery drain and suggest actions',
+      'Enforce power policy to reduce idle timeouts across marketing laptops',
+      'Schedule hibernation during off-hours for shared lab devices',
+      'Alert me to batteries below 70% health',
+    ],
+    application: [
+      'List apps with the most crashes across the fleet this month',
+      'Roll out Slack update to Engineering with a canary group first',
+      'Find devices missing Microsoft 365 and schedule installation',
+      'Report on app versions for Zoom across all regions',
+      'Pause rollouts if crash rate exceeds 2%',
+    ],
+    deployment: [
+      'Roll out driver updates gradually across all US-based PCs',
+      'Schedule a test batch for Windows security updates this week',
+      "Help me deploy all BIOS-related updates that don't require a reboot",
+      'Create a maintenance window for APAC Wednesdays 1–3AM',
+      'Notify device owners before deployment begins',
+    ],
+    device: [
+      'Push Wi‑Fi configuration for guest network to conference rooms',
+      'Apply BitLocker policy to all devices without encryption',
+      'Create a baseline for new Windows devices with standard apps and settings',
+      'Tag devices that fail baseline checks for follow-up',
+      'Rotate local admin password on all kiosks',
+    ],
+    file: [
+      'Search for devices with large temp files and clean up safely',
+      'Show file integrity alerts for protected folders in the last 24 hours',
+      'Collect logs from devices with recent backup failures',
+      'Audit downloads of sensitive documents last 7 days',
+      'List endpoints with low disk space below 10%',
+    ],
+  };
 
-  const currentPrompts = selectedAssistant?.key === 'deployment' ? deploymentPrompts : defaultPrompts;
+  // Pick 3–5 prompts for the current selection, stable until selection changes
+  const [currentPrompts, setCurrentPrompts] = useState<string[]>(defaultPrompts);
+
+  const pickPrompts = (list: string[]) => {
+    const max = Math.min(5, list.length);
+    const min = Math.min(3, max);
+    const count = Math.floor(Math.random() * (max - min + 1)) + min;
+    return [...list]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
+  };
+
+  useEffect(() => {
+    if (selectedAssistant?.key) {
+      const list = promptsByAssistant[selectedAssistant.key] || defaultPrompts;
+      setCurrentPrompts(pickPrompts(list));
+    } else {
+      setCurrentPrompts(pickPrompts(defaultPrompts));
+    }
+  }, [selectedAssistant]);
 
   // Close on outside click / Esc
   useEffect(() => {
@@ -76,6 +136,12 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
   }, [menuOpen]);
 
   const handleAssistantSelect = (assistant: { key: string; name: string; icon?: React.ReactNode }) => {
+    if (assistant.key === 'file') {
+      // Open file picker instead of adding a chip
+      inputRef.current?.openFilePicker();
+      setMenuOpen(false);
+      return;
+    }
     setSelectedAssistant(assistant);
     setMenuOpen(false);
   };
@@ -106,6 +172,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
         {/* Input Field */}
         <div className="w-full max-w-2xl mb-8 relative">
           <AIInputField
+            ref={inputRef}
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSendMessage}

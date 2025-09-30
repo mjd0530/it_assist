@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useImperativeHandle } from 'react';
 import { Plus, Mic, Send, Paperclip, X } from 'lucide-react';
 
 export interface AIInputFieldProps {
@@ -21,7 +21,11 @@ export interface AIInputFieldProps {
   onPlusClick?: () => void; // open assistant menu
 }
 
-export const AIInputField: React.FC<AIInputFieldProps> = ({
+export interface AIInputFieldHandle {
+  openFilePicker: () => void;
+}
+
+export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldProps>(({ 
   value,
   onChange,
   onSend,
@@ -38,7 +42,7 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
   , selectedAssistant = null
   , onClearAssistant
   , onPlusClick
-}) => {
+}, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -127,6 +131,13 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
     const newAttachments = attachments.filter((_, i) => i !== index);
     onAttachmentsChange?.(newAttachments);
   };
+
+  // Expose imperative API
+  useImperativeHandle(ref, () => ({
+    openFilePicker: () => {
+      if (!disabled) fileInputRef.current?.click();
+    }
+  }), [disabled]);
 
   const canSend = value.trim() || attachments.length > 0;
 
@@ -299,4 +310,4 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
       )}
     </div>
   );
-};
+});
