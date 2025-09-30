@@ -11,9 +11,10 @@ import { LineChart } from '../Charts/LineChart';
 interface CenterContentProps {
   selectedThread?: number | null;
   isNewThread?: boolean;
+  onStartDeploymentPlan?: (initialQuery: string) => void;
 }
 
-export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread }) => {
+export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread, onStartDeploymentPlan }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -196,6 +197,20 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     };
 
     setMessages(prev => [...prev, userMessage]);
+    // If user intent sounds like deployment planning, route to planner
+    const lower = prompt.toLowerCase();
+    const isDeploymentIntent =
+      lower.includes('deploy') ||
+      lower.includes('deployment') ||
+      lower.includes('update plan') ||
+      lower.includes('bios updates') ||
+      lower.includes('driver updates');
+
+    if (isDeploymentIntent && onStartDeploymentPlan) {
+      onStartDeploymentPlan(prompt);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -236,6 +251,7 @@ export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, is
     return (
       <FirstTimeUse 
         onPromptClick={handlePromptClick}
+        onStartDeploymentPlan={onStartDeploymentPlan}
         isLoading={isLoading}
       />
     );

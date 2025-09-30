@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LeftNavigation } from './components/LeftNavigation';
-import { CenterContent } from './components/CenterContent';
-import { DeploymentPlannerPage } from './components/DeploymentPlannerPage';
+import { CenterContent } from './components/CenterContent/CenterContent';
+import { DeploymentPlannerPage } from './components/DeploymentPlannerPage/DeploymentPlannerPage';
 import { AssistantsPage } from './components/AssistantsPage';
 import { ThreadsPage } from './components/ThreadsPage';
 
@@ -11,6 +11,7 @@ function App() {
   const [selectedThread, setSelectedThread] = useState<number | null>(0);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [isNewThread, setIsNewThread] = useState(false);
+  const [deploymentInitialQuery, setDeploymentInitialQuery] = useState<string | null>(null);
 
 
 
@@ -42,6 +43,14 @@ function App() {
     setSelectedThread(null);
   };
 
+  const handleStartDeploymentPlan = (initialQuery: string) => {
+    setDeploymentInitialQuery(initialQuery);
+    setSelectedWorkflow('new-workflow');
+    setCurrentView('deploymentPlanner');
+    setIsMobileMenuOpen(false);
+    setSelectedThread(null);
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Main Layout */}
@@ -57,13 +66,13 @@ function App() {
         
         {/* Dynamic Content */}
         {currentView === 'deploymentPlanner' ? (
-          <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} />
+          <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} initialQuery={deploymentInitialQuery || undefined} />
         ) : currentView === 'assistants' ? (
           <AssistantsPage />
         ) : currentView === 'threads' ? (
           <ThreadsPage />
         ) : (
-          <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} />
+          <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} onStartDeploymentPlan={handleStartDeploymentPlan} />
         )}
       </div>
     </div>
