@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Plus, Mic, Send, Paperclip } from 'lucide-react';
+import { Plus, Mic, Send, Paperclip, X } from 'lucide-react';
 
 export interface AIInputFieldProps {
   value: string;
@@ -15,6 +15,10 @@ export interface AIInputFieldProps {
   maxHeight?: number;
   attachments?: File[];
   onAttachmentsChange?: (attachments: File[]) => void;
+  // Assistant chip support
+  selectedAssistant?: { key: string; name: string; icon?: React.ReactNode } | null;
+  onClearAssistant?: () => void;
+  onPlusClick?: () => void; // open assistant menu
 }
 
 export const AIInputField: React.FC<AIInputFieldProps> = ({
@@ -31,6 +35,9 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
   maxHeight = 120,
   attachments = [],
   onAttachmentsChange
+  , selectedAssistant = null
+  , onClearAssistant
+  , onPlusClick
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -184,7 +191,7 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
           </div>
         )}
 
-        {/* Text input area - TOP section */}
+        {/* Text input area - TOP section (textarea only) */}
         <div className="px-4 pt-4 pb-1">
           <textarea
             ref={textareaRef}
@@ -210,19 +217,36 @@ export const AIInputField: React.FC<AIInputFieldProps> = ({
 
         {/* Buttons row - BOTTOM section */}
         <div className="flex items-center justify-between px-4 pb-4 pt-1">
-          {/* Left side - Attachment button */}
+          {/* Left side - Plus button (assistant menu trigger) */}
           <button 
-            onClick={handleAttachClick}
+            onClick={onPlusClick ?? handleAttachClick}
             disabled={disabled}
             className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Attach file"
-            aria-label="Attach file"
+            title="Add assistant or attachments"
+            aria-label="Add assistant or attachments"
           >
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
 
+          {/* Inline chip to the right of plus button */}
+          {selectedAssistant && (
+            <div className="ml-3 inline-flex items-center max-w-full rounded-2xl bg-white border border-slate-200 px-3 py-2 gap-3 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+              <span className="flex items-center gap-2 text-sm text-slate-900">
+                {selectedAssistant.icon}
+                <span className="truncate">{selectedAssistant.name}</span>
+              </span>
+              <button
+                onClick={() => onClearAssistant?.()}
+                className="p-1 rounded-full hover:bg-gray-100 text-slate-700"
+                aria-label="Remove assistant"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Right side - Voice and Send buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             {/* Voice input button */}
             <button 
               onClick={handleMicClick}

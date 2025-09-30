@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
 import { AIInputField } from '../AIInputField';
+import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined';
+import PowerOutlined from '@mui/icons-material/PowerOutlined';
+import AppsOutlined from '@mui/icons-material/AppsOutlined';
+import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
+import BuildOutlined from '@mui/icons-material/BuildOutlined';
+import InsertDriveFileOutlined from '@mui/icons-material/InsertDriveFileOutlined';
 
 interface FirstTimeUseProps {
   onPromptClick: (prompt: string) => void;
@@ -9,6 +15,10 @@ interface FirstTimeUseProps {
 
 export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoading = false }) => {
   const [inputValue, setInputValue] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const plusBtnRef = useRef<HTMLButtonElement>(null);
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
@@ -24,6 +34,51 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
     "What are the key features available in Policy Management?",
     "How can I register a new Windows device?"
   ];
+
+  // Assistant definitions
+  const assistants = [
+    { key: 'ticket', name: 'Ticket', icon: <ConfirmationNumberOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+    { key: 'power', name: 'Power', icon: <PowerOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+    { key: 'application', name: 'Application', icon: <AppsOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+    { key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+    { key: 'device', name: 'Device Configuration', icon: <BuildOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+    { key: 'file', name: 'File', icon: <InsertDriveFileOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
+  ] as const;
+
+  // Prompts by assistant
+  const defaultPrompts = suggestedPrompts;
+  const deploymentPrompts = [
+    "Roll out driver updates gradually across all US-based PCs",
+    "Schedule a test batch for Windows security updates this week",
+    "Help me deploy all BIOS-related updates that don't require a reboot",
+  ];
+
+  const currentPrompts = selectedAssistant?.key === 'deployment' ? deploymentPrompts : defaultPrompts;
+
+  // Close on outside click / Esc
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!menuOpen) return;
+      const target = e.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target) && !plusBtnRef.current?.contains(target)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const handleAssistantSelect = (assistant: { key: string; name: string; icon?: React.ReactNode }) => {
+    setSelectedAssistant(assistant);
+    setMenuOpen(false);
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full" style={{ backgroundColor: '#F8FAFC' }}>
@@ -49,7 +104,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
         </h1>
 
         {/* Input Field */}
-        <div className="w-full max-w-2xl mb-8">
+        <div className="w-full max-w-2xl mb-8 relative">
           <AIInputField
             value={inputValue}
             onChange={setInputValue}
@@ -58,13 +113,47 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, isLoa
             disabled={isLoading}
             isLoading={isLoading}
             autoFocus={true}
+            selectedAssistant={selectedAssistant}
+            onClearAssistant={() => setSelectedAssistant(null)}
+            onPlusClick={() => setMenuOpen((o) => !o)}
           />
+
+          {/* Assistant selection menu */}
+          {menuOpen && (
+            <div
+              ref={menuRef}
+              className="absolute left-2 top-14 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95"
+              role="menu"
+              aria-label="Select assistant"
+            >
+              {assistants.slice(0,5).map((a) => (
+                <button
+                  key={a.key}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                  onClick={() => handleAssistantSelect(a)}
+                  role="menuitem"
+                >
+                  <span className="w-6 h-6 flex items-center justify-center rounded-md">{a.icon}</span>
+                  <span className="text-sm text-slate-900">{a.name}</span>
+                </button>
+              ))}
+              <div className="my-2 mx-3 border-t border-gray-200" />
+              <button
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                onClick={() => handleAssistantSelect(assistants[5])}
+                role="menuitem"
+              >
+                <span className="w-6 h-6 flex items-center justify-center rounded-md">{assistants[5].icon}</span>
+                <span className="text-sm text-slate-900">{assistants[5].name}</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Suggested Questions - Contained Card List */}
+        {/* Suggested Questions - Contained Card List (dynamic) */}
         <div className="w-full max-w-2xl">
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            {suggestedPrompts.map((prompt, index) => (
+            {currentPrompts.map((prompt, index) => (
               <div 
                 key={index}
                 onClick={() => !isLoading && onPromptClick(prompt)}
