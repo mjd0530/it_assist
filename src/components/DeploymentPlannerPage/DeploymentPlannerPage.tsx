@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Square } from 'lucide-react';
 // Removed seeded deployment conversations to keep the planner clean
 import type { Message } from '../../types';
-import { cn } from '../../utils/cn';
 // Removed avatars for a cleaner message style
 import { AIInputField } from '../AIInputField';
 import { DeploymentAccordion } from './DeploymentAccordion';
+import { UserMessage, AIMessage } from '../MessageBubbles';
 import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
 
 interface DeploymentPlannerPageProps {
@@ -137,8 +137,8 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
               <div className="w-full max-w-2xl mx-auto space-y-6 pb-8">
               {/* Confirmation message */}
               {isGenerating && (loadingStage === 'confirming' || loadingStage === 'building' || loadingStage === 'complete') && (
-                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]">
-                  Got it. Pulling in all updates scoped to the <strong>NA region</strong> and creating a <strong>draft plan</strong>.
+                <div className="fade-in-up">
+                  <AIMessage content="Got it. Pulling in all updates scoped to the NA region and creating a draft plan." />
                 </div>
               )}
 
@@ -192,35 +192,20 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
 
               {/* AI follow-up */}
               {isGenerating && loadingStage === 'complete' && (
-                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]" style={{ animationDelay: '300ms' }}>
-                  Would you like to proceed with the deployment plan or make any changes?
+                <div className="fade-in-up" style={{ animationDelay: '300ms' }}>
+                  <AIMessage content="Would you like to proceed with the deployment plan or make any changes?" />
                 </div>
               )}
 
               {/* Conversation history */}
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex space-x-3 animate-fade-in",
-                      message.role === 'user' ? "justify-end" : "justify-start"
+                  <div key={message.id} className="animate-fade-in">
+                    {message.role === 'user' ? (
+                      <UserMessage content={message.content} />
+                    ) : (
+                      <AIMessage content={message.content} />
                     )}
-                  >
-                    
-                    <div className={cn(
-                      "max-w-[80%] rounded-2xl px-4 py-3 relative group",
-                      message.role === 'user' 
-                        ? "bg-white text-gray-900 border border-gray-200" 
-                        : "bg-secondary-50 text-secondary-900 border border-secondary-200"
-                    )}>
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {message.content}
-                      </div>
-                      
-                    </div>
-
-                    
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -241,8 +226,8 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
 
               {/* Completion message positioned below accordion */}
               {accordionCompleted && (
-                <div className="bg-[#F3F0FF] text-slate-900 rounded-2xl px-5 py-4 fade-in-up shadow-sm border border-[#E8E2FF]" style={{ animationDelay: '150ms' }}>
-                  Deployment plan completed successfully. I will continue monitoring and let you know if anything requires attention.
+                <div className="fade-in-up" style={{ animationDelay: '150ms' }}>
+                  <AIMessage content="Deployment plan completed successfully. I will continue monitoring and let you know if anything requires attention." />
                 </div>
               )}
 
