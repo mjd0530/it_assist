@@ -83,7 +83,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
       `} style={{ width: '320px' }} role="navigation" aria-label="Main Navigation">
         
         {/* Header Section */}
-        <div className="p-4" role="banner">
+        <div className="pb-4" role="banner">
           <div className="flex items-center space-x-3">
             <img src={motoLogo} alt="Moto AI Logo" className="w-8 h-8" />
             <span className="text-xl font-semibold text-gray-900">IT Assist</span>
@@ -92,7 +92,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
         
         {/* Assistants Section */}
         <div className="flex-1 overflow-y-auto" role="main">
-          <div className="p-4">
+          <div className="py-4">
             <button
               onClick={() => onViewChange('assistants')}
               className={`flex items-center justify-between w-full text-left mb-2 group p-2 rounded-lg transition-colors ${
@@ -137,15 +137,19 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
 
             {/* Thread Items */}
             <div className="space-y-1 mt-2">
-              {threads.map((thread) => (
-                <ThreadItem
-                  key={thread.id}
-                  thread={thread}
-                  isSelected={selectedThread === thread.id}
-                  onSelect={handleThreadClick}
-                  onDelete={handleDeleteThread}
-                />
-              ))}
+              {threads.length === 0 ? (
+                <div className="text-xs text-gray-500 p-2">No threads available</div>
+              ) : (
+                threads.map((thread) => (
+                  <ThreadItem
+                    key={thread.id}
+                    thread={thread}
+                    isSelected={selectedThread === thread.id}
+                    onSelect={handleThreadClick}
+                    onDelete={handleDeleteThread}
+                  />
+                ))
+              )}
             </div>
 
           </div>

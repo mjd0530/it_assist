@@ -1,32 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import CheckCircle from '@mui/icons-material/CheckCircle';
+import { threadService } from '../../services/threadService';
 
 interface DeploymentAccordionProps {
+  /** Thread ID to track deployment progress */
+  threadId?: number | null;
   /** If true, the accordion begins simulating progress immediately */
   start?: boolean;
-  /** Total duration to finish all stages, in milliseconds (default: 5 minutes) */
-  totalDurationMs?: number;
   /** Callback fired once all stages are complete */
   onComplete?: () => void;
 }
 
 type StageStatus = 'pending' | 'in_progress' | 'complete';
 
-const STAGE_TITLES = [
-  'Stage 1: Perform system scan',
-  'Stage 2: Critical updates assessment',
-  'Stage 3: Recommended updates assessment',
-  'Stage 4: Optional updates assessment',
-];
-
 export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
+  threadId,
   start = false,
-  totalDurationMs = 60 * 1000,
   onComplete,
 }) => {
   const [expandedIndex, setExpandedIndex] = useState(0);
-  const [progressMs, setProgressMs] = useState(0);
+  const [, setTick] = useState(0); // Force re-render
   const hasCompletedRef = useRef(false);
+  
+  const stageInfo = threadService.getStageInfo();
+  const STAGE_TITLES = stageInfo.stages;
 
   const Spinner = () => (
     <span
@@ -36,48 +33,42 @@ export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
     />
   );
 
-  const stageDurations = useMemo(() => {
-    // Evenly split total time across stages
-    const perStage = Math.floor(totalDurationMs / STAGE_TITLES.length);
-    return [perStage, perStage, perStage, totalDurationMs - perStage * 3];
-  }, [totalDurationMs]);
-
-  const stageBoundaries = useMemo(() => {
-    const bounds: number[] = [];
-    let acc = 0;
-    for (const dur of stageDurations) {
-      acc += dur;
-      bounds.push(acc);
-    }
-    return bounds; // cumulative ends for stages [s1End, s2End, ...]
-  }, [stageDurations]);
-
+  // Get progress from thread service
+  const thread = threadId !== null && threadId !== undefined ? threadService.getThread(threadId) : undefined;
+  const deploymentTimer = threadId !== null && threadId !== undefined ? threadService.getDeploymentTimer(threadId) : null;
+  
+  const progressMs = deploymentTimer?.elapsed || 0;
+  const totalDurationMs = deploymentTimer?.total || stageInfo.totalDuration;
+  
   const currentStageIndex = useMemo(() => {
-    for (let i = 0; i < stageBoundaries.length; i++) {
-      if (progressMs < stageBoundaries[i]) return i;
-    }
-    return STAGE_TITLES.length - 1;
-  }, [progressMs, stageBoundaries]);
+    if (!thread?.deploymentProgress) return 0;
+    // Stage is 1-indexed in the progress, so subtract 1 for 0-indexed array
+    return (thread.deploymentProgress.currentStage || 1) - 1;
+  }, [thread?.deploymentProgress]);
 
   const stageStatuses: StageStatus[] = useMemo(() => {
+    const isComplete = thread?.deploymentProgress && !thread.deploymentProgress.isActive;
+    
     return STAGE_TITLES.map((_, idx) => {
+      if (isComplete) return 'complete';
       if (idx < currentStageIndex) return 'complete';
       if (idx === currentStageIndex && progressMs < totalDurationMs) return 'in_progress';
-      return progressMs >= totalDurationMs ? 'complete' : 'pending';
+      return 'pending';
     });
-  }, [currentStageIndex, progressMs, totalDurationMs]);
+  }, [currentStageIndex, progressMs, totalDurationMs, thread?.deploymentProgress, STAGE_TITLES]);
 
   useEffect(() => {
     if (!start) return;
     setExpandedIndex(0);
-    setProgressMs(0);
     // Reset completion guard when a new run starts
     hasCompletedRef.current = false;
   }, [start]);
 
   useEffect(() => {
     if (!start) return;
-    if (progressMs >= totalDurationMs) {
+    
+    // Check if deployment is complete
+    if (thread?.deploymentProgress && !thread.deploymentProgress.isActive) {
       if (!hasCompletedRef.current) {
         hasCompletedRef.current = true;
         onComplete?.();
@@ -85,19 +76,19 @@ export const DeploymentAccordion: React.FC<DeploymentAccordionProps> = ({
       return;
     }
 
-    // Smooth progress update every second
+    // Poll for updates every second to update UI
     const interval = setInterval(() => {
-      setProgressMs(prev => {
-        const next = Math.min(prev + 1000, totalDurationMs);
-        // Expand the panel corresponding to the active stage
-        const idx = stageBoundaries.findIndex(boundary => next <= boundary);
-        setExpandedIndex(idx === -1 ? STAGE_TITLES.length - 1 : idx);
-        return next;
-      });
+      setTick(prev => prev + 1);
+      
+      // Auto-expand the current stage
+      if (thread?.deploymentProgress) {
+        const stageIdx = (thread.deploymentProgress.currentStage || 1) - 1;
+        setExpandedIndex(stageIdx);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [start, progressMs, totalDurationMs, stageBoundaries, onComplete]);
+  }, [start, thread?.deploymentProgress, onComplete]);
 
   const renderDot = (status: StageStatus) => {
     if (status === 'complete') {

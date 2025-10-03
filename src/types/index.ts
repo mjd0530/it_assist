@@ -14,6 +14,12 @@ export interface Thread {
   lastMessage?: string;
   createdAt: Date;
   updatedAt: Date;
+  deploymentProgress?: {
+    isActive: boolean;
+    currentStage: number;
+    totalStages: number;
+    stageName: string;
+  };
 }
 
 export interface ChatSession {

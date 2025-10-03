@@ -7,24 +7,39 @@ import { AIInputField } from '../AIInputField';
 import { DeploymentAccordion } from './DeploymentAccordion';
 import { UserMessage, AIMessage } from '../MessageBubbles';
 import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
+import { threadService } from '../../services/threadService';
 
 interface DeploymentPlannerPageProps {
   selectedWorkflow?: string | null;
   initialQuery?: string;
+  threadId?: number | null;
 }
 
-export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ selectedWorkflow = 'new-workflow', initialQuery }) => {
+export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ selectedWorkflow = 'new-workflow', initialQuery, threadId }) => {
+  // Try to restore saved state if available
+  const savedState = threadId !== null && threadId !== undefined ? threadService.getDeploymentState(threadId) : undefined;
+  
+  // Track if we've loaded saved state to prevent resetting
+  const hasLoadedSavedState = useRef(false);
+  
   const [isGenerating, setIsGenerating] = useState(false);
-  const [loadingStage, setLoadingStage] = useState<'idle' | 'confirming' | 'building' | 'complete'>('idle');
-  const [accordionStart, setAccordionStart] = useState(false);
-  const [accordionCompleted, setAccordionCompleted] = useState(false);
-  const [planContent, setPlanContent] = useState<null | { title: string; summary: string; steps: string[] }>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [loadingStage, setLoadingStage] = useState<'idle' | 'confirming' | 'building' | 'complete'>(savedState ? 'complete' : 'idle');
+  const [accordionStart, setAccordionStart] = useState(savedState?.accordionStart || false);
+  const [accordionCompleted, setAccordionCompleted] = useState(savedState?.accordionCompleted || false);
+  const [planContent, setPlanContent] = useState<null | { title: string; summary: string; steps: string[] }>(savedState?.planContent || null);
+  const [messages, setMessages] = useState<Message[]>(savedState?.messages || []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>({ key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> });
+  
+  // Mark that we've loaded saved state on initial mount
+  useEffect(() => {
+    if (savedState) {
+      hasLoadedSavedState.current = true;
+    }
+  }, []);
 
   const isConfirmation = (text: string) => {
     const normalized = text
@@ -63,11 +78,27 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
     return phraseSignals.some(p => normalized.includes(p));
   };
 
+  // Save state whenever it changes
+  useEffect(() => {
+    if (threadId !== null && threadId !== undefined && (planContent || messages.length > 0)) {
+      threadService.saveDeploymentState(threadId, {
+        messages,
+        accordionStart,
+        accordionCompleted,
+        planContent,
+        initialQuery: initialQuery || savedState?.initialQuery || ''
+      });
+    }
+  }, [messages, accordionStart, accordionCompleted, planContent, threadId, initialQuery, savedState?.initialQuery]);
+
   // Auto-scroll
 
   useEffect(() => {
-    // Reset messages when switching workflows
-    setMessages([]);
+    // Reset messages when switching workflows (only if not resuming from saved state)
+    // Don't reset if we've already loaded saved state on mount
+    if (!hasLoadedSavedState.current && !savedState) {
+      setMessages([]);
+    }
   }, [selectedWorkflow]);
 
   useEffect(() => {
@@ -85,6 +116,7 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
   useEffect(() => {
     if (!isGenerating) return;
     setLoadingStage('confirming');
+    
     const t1 = setTimeout(() => {
       if (cancelRequested) return;
       setLoadingStage('building');
@@ -108,15 +140,15 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [isGenerating, cancelRequested]);
+  }, [isGenerating, cancelRequested, threadId]);
 
-  // Auto-start generation when arriving with an initial query
+  // Auto-start generation when arriving with an initial query (but not when resuming)
   useEffect(() => {
-    if (initialQuery && !isGenerating) {
+    if (initialQuery && !isGenerating && !savedState) {
       setIsGenerating(true);
       setCancelRequested(false);
     }
-  }, [initialQuery, isGenerating]);
+  }, [initialQuery, isGenerating, savedState]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -215,10 +247,11 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
               {accordionStart && (
                 <div className="fade-in-up" style={{ animationDelay: '150ms' }}>
                   <DeploymentAccordion
+                    threadId={threadId}
                     start={accordionStart}
-                    totalDurationMs={60 * 1000}
                     onComplete={() => {
                       setAccordionCompleted(true);
+                      // Completion is handled automatically by the background service
                     }}
                   />
                 </div>
@@ -249,6 +282,15 @@ export const DeploymentPlannerPage: React.FC<DeploymentPlannerPageProps> = ({ se
                       setMessages(prev => ([...prev, userMsg]));
                       setAccordionCompleted(false);
                       setAccordionStart(true);
+                      
+                      // Start deployment progress - this is when the spinner appears
+                      if (threadId !== null && threadId !== undefined) {
+                        const thread = threadService.getThread(threadId);
+                        if (thread) {
+                          threadService.startDeployment(threadId, thread.name);
+                        }
+                      }
+                      
                       setMessages(prev => ([
                         ...prev,
                         {

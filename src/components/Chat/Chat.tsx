@@ -113,11 +113,6 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     // Save messages immediately after user sends
     threadService.setThreadMessages(threadId, newMessages);
 
-    // Update thread status to loading
-    if (threadId !== null && threadId !== undefined) {
-      threadService.updateThreadStatus(threadId, 'loading');
-    }
-
     // Generate AI response
     try {
       const aiResponse = await aiService.generateResponse(message, threadId.toString());
@@ -133,11 +128,6 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
       
       // Save messages after AI response
       threadService.setThreadMessages(threadId, messagesWithAI);
-      
-      // Update thread status to completed
-      if (threadId !== null && threadId !== undefined) {
-        threadService.updateThreadStatus(threadId, 'completed');
-      }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -151,11 +141,6 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
       
       // Save messages even with error
       threadService.setThreadMessages(threadId, messagesWithError);
-      
-      // Update thread status to error
-      if (threadId !== null && threadId !== undefined) {
-        threadService.updateThreadStatus(threadId, 'error');
-      }
     } finally {
       setIsLoading(false);
     }

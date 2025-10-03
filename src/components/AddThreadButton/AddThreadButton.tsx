@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import SquareEditOutline from '../../assets/square-edit-outline.svg';
 
 interface AddThreadButtonProps {
   onAddThread: () => void;
@@ -17,24 +17,14 @@ export const AddThreadButton: React.FC<AddThreadButtonProps> = ({
   };
 
   return (
-    <button
+    <img 
+      src={SquareEditOutline} 
+      alt="Add new thread" 
+      className={`w-5 h-5 ${
+        disabled ? 'opacity-30 cursor-not-allowed' : 'opacity-60 group-hover:opacity-100'
+      } transition-opacity cursor-pointer`} 
+      style={{ filter: 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)' }}
       onClick={handleClick}
-      disabled={disabled}
-      className={`
-        flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium
-        ${disabled 
-          ? 'text-gray-400 cursor-not-allowed bg-gray-50' 
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
-        }
-      `}
-    >
-      <div className={`
-        p-1 rounded
-        ${disabled ? 'bg-gray-200' : 'bg-blue-100 hover:bg-blue-200'}
-      `}>
-        <Plus className={`w-4 h-4 ${disabled ? 'text-gray-400' : 'text-blue-600'}`} />
-      </div>
-      <span>Add new</span>
-    </button>
+    />
   );
 };

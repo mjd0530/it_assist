@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Trash2, CheckCircle, AlertCircle, LoaderIcon } from 'lucide-react';
+import { MoreVertical, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import QuestionAnswerOutlined from '../../assets/QuestionAnswerOutlined.svg';
 import type { Thread } from '../../types';
 
@@ -40,6 +40,12 @@ export const ThreadItem: React.FC<ThreadItemProps> = ({
 
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // Don't allow deleting the default thread (id: 0)
+    if (thread.id === 0) {
+      return;
+    }
+    
     // Style confirmation as a modern UI modal
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 flex items-center justify-center bg-black/50 z-50';
@@ -71,67 +77,54 @@ export const ThreadItem: React.FC<ThreadItemProps> = ({
     return;
   };
 
-  const renderStatusIcon = () => {
-    switch (thread.status) {
-      case 'loading':
-        return <LoaderIcon className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'completed':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getThreadName = () => {
-    if (thread.status === 'loading') {
-      return 'Processing...';
-    }
-    return thread.name;
-  };
 
   return (
     <div className="relative" id={`thread-${thread.id}`}>
       <div
-        className={`flex items-center justify-between p-2 rounded-lg group cursor-pointer transition-colors ${
+        className={`flex items-center justify-between px-3 py-3 rounded-lg group cursor-pointer transition-colors ${
           isSelected 
-            ? 'bg-blue-50 text-blue-700' 
+            ? 'bg-blue-50' 
             : 'hover:bg-gray-50'
         }`}
         onClick={() => onSelect(thread.id)}
       >
         <div className="flex items-center space-x-3 flex-1 min-w-0">
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <img 
-              src={QuestionAnswerOutlined} 
-              alt="Question Answer" 
-              className={`w-5 h-5 ${isSelected ? 'opacity-100' : 'opacity-60'}`}
-              style={{ 
-                filter: isSelected 
-                  ? 'brightness(0) saturate(100%) invert(20%) sepia(100%) saturate(2000%) hue-rotate(240deg) brightness(0.8) contrast(1.2)'
-                  : 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)'
-              }}
-            />
-            {renderStatusIcon()}
-          </div>
+          <img 
+            src={QuestionAnswerOutlined} 
+            alt="Thread" 
+            className="w-6 h-6 flex-shrink-0"
+            style={{ 
+              filter: isSelected 
+                ? 'brightness(0) saturate(100%) invert(38%) sepia(95%) saturate(2476%) hue-rotate(215deg) brightness(98%) contrast(101%)'
+                : 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)'
+            }}
+          />
           <div className="flex-1 min-w-0">
-            <div className={`text-sm ${isSelected ? 'text-blue-700' : ''} ${thread.status === 'loading' ? 'italic' : ''}`} 
-                 style={{ color: isSelected ? undefined : '#171717' }}>
-              {getThreadName()}
+            <div className={`text-base font-normal truncate ${isSelected ? 'text-blue-600' : 'text-gray-900'}`}>
+              {thread.name}
             </div>
-            <div className={`text-xs ${isSelected ? 'text-blue-700' : 'text-gray-500'}`}>
+            <div className={`text-xs mt-0.5 ${isSelected ? 'text-blue-500' : 'text-gray-500'}`}>
               {thread.date}
             </div>
           </div>
+          {thread.deploymentProgress?.isActive && (
+            <Loader2 className={`w-4 h-4 animate-spin flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+          )}
+          {thread.deploymentProgress && !thread.deploymentProgress.isActive && (
+            <CheckCircle className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-green-600' : 'text-green-500'}`} />
+          )}
         </div>
         
-        {thread.status !== 'loading' && (
+        {thread.id !== 0 && (
           <button
             onClick={handleMenuToggle}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+            className={`p-1 rounded transition-all flex-shrink-0 ${
+              isSelected 
+                ? 'opacity-100' 
+                : 'opacity-0 group-hover:opacity-100'
+            }`}
           >
-            <MoreVertical className="w-4 h-4 text-gray-600" />
+            <MoreVertical className={`w-5 h-5 ${isSelected ? 'text-gray-700' : 'text-gray-600'}`} />
           </button>
         )}
       </div>

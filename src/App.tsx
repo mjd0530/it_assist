@@ -4,7 +4,7 @@ import { CenterContent } from './components/CenterContent/CenterContent';
 import { DeploymentPlannerPage } from './components/DeploymentPlannerPage/DeploymentPlannerPage';
 import { AssistantsPage } from './components/AssistantsPage';
 import { ThreadsPage } from './components/ThreadsPage';
-// Thread service is imported by LeftNavigation component
+import { threadService } from './services/threadService';
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -31,10 +31,23 @@ function App() {
 
   const handleThreadSelect = (threadId: number, isNew: boolean = false) => {
     setSelectedThread(threadId);
-    setCurrentView('home');
     setIsMobileMenuOpen(false);
-    setSelectedWorkflow(null);
     setIsNewThread(isNew);
+    
+    // Check if this thread has an active deployment OR saved deployment state
+    const thread = threadService.getThread(threadId);
+    const hasSavedDeploymentState = threadService.getDeploymentState(threadId);
+    
+    if (thread?.deploymentProgress?.isActive || hasSavedDeploymentState) {
+      // Thread has active deployment or saved deployment history, show deployment planner
+      setCurrentView('deploymentPlanner');
+      setSelectedWorkflow('active-deployment');
+      setDeploymentInitialQuery(null); // Don't auto-start, resume existing
+    } else {
+      // Normal thread, show chat
+      setCurrentView('home');
+      setSelectedWorkflow(null);
+    }
   };
 
   const handleWorkflowSelect = (workflowId: string) => {
@@ -49,7 +62,14 @@ function App() {
     setSelectedWorkflow('new-workflow');
     setCurrentView('deploymentPlanner');
     setIsMobileMenuOpen(false);
-    // Keep selectedThread - don't clear it since deployment was initiated from a thread
+    
+    // Update thread name for the deployment plan
+    if (selectedThread !== null && selectedThread !== undefined) {
+      // Extract a meaningful name from the query (first 50 chars)
+      const deploymentName = initialQuery.slice(0, 50) + (initialQuery.length > 50 ? '...' : '');
+      threadService.updateThreadName(selectedThread, deploymentName);
+      // Don't start deployment progress yet - wait until user confirms to proceed
+    }
   };
 
   return (
@@ -67,11 +87,27 @@ function App() {
         
         {/* Dynamic Content */}
         {currentView === 'deploymentPlanner' ? (
-          <DeploymentPlannerPage selectedWorkflow={selectedWorkflow} initialQuery={deploymentInitialQuery || undefined} />
+          <DeploymentPlannerPage 
+            selectedWorkflow={selectedWorkflow} 
+            initialQuery={deploymentInitialQuery || undefined}
+            threadId={selectedThread}
+          />
         ) : currentView === 'assistants' ? (
           <AssistantsPage />
         ) : currentView === 'threads' ? (
-          <ThreadsPage />
+          <ThreadsPage 
+            onThreadSelect={(threadId) => {
+              setSelectedThread(threadId);
+              setCurrentView('home');
+              setIsNewThread(false);
+            }}
+            onNewThread={() => {
+              const newThread = threadService.addThread();
+              setSelectedThread(newThread.id);
+              setCurrentView('home');
+              setIsNewThread(true);
+            }}
+          />
         ) : (
           <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} onStartDeploymentPlan={handleStartDeploymentPlan} />
         )}
