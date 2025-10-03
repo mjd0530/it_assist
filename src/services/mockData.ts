@@ -130,7 +130,7 @@ These hooks provide reusable logic with proper TypeScript typing!`,
 
 // Thread-specific conversations
 export const threadConversations: Record<number, Message[]> = {
-  0: mockMessages, // Current/new thread
+  0: [], // Default empty thread for first-time use experience
   1: [ // Windows Update deployment strategy
     {
       id: '1',

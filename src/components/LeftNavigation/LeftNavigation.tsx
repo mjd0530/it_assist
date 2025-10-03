@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
-import QuestionAnswerOutlined from '../../assets/QuestionAnswerOutlined.svg';
 import SquareEditOutline from '../../assets/square-edit-outline.svg';
+import { ThreadItem } from '../ThreadItem';
+import { AddThreadButton } from '../AddThreadButton';
+import { threadService } from '../../services/threadService';
+import type { Thread } from '../../types';
 
 interface LeftNavigationProps {
   currentView: string;
@@ -12,20 +15,47 @@ interface LeftNavigationProps {
 }
 
 export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onViewChange, onThreadSelect, selectedThread }) => {
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
 
-  // Thread data
-  const threads = [
-    { id: 0, name: "New thread on 09/08 2:50 PM", date: "09/08 2:50 PM" }
-  ];
+  // Load threads on mount
+  useEffect(() => {
+    setThreads(threadService.getThreads());
+  }, []);
+
+  // Refresh threads periodically to catch updates (like name changes)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setThreads(threadService.getThreads());
+    }, 1000); // Refresh every second
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleThreadClick = (threadId: number) => {
     onThreadSelect(threadId, false);
   };
 
-  const handleMenuToggle = (threadId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setOpenMenuId(openMenuId === threadId ? null : threadId);
+  const handleAddThread = () => {
+    const newThread = threadService.addThread();
+    setThreads(threadService.getThreads());
+    // Select the new thread and mark it as new to show FirstTimeUse screen
+    onThreadSelect(newThread.id, true);
+    
+    // Scroll the new thread into view after a brief delay to allow rendering
+    setTimeout(() => {
+      const newThreadElement = document.getElementById(`thread-${newThread.id}`);
+      newThreadElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  const handleDeleteThread = (threadId: number) => {
+    threadService.deleteThread(threadId);
+    setThreads(threadService.getThreads());
+    
+    // If we deleted the currently selected thread, clear selection
+    if (selectedThread === threadId) {
+      onThreadSelect(0, false); // Go back to default thread
+    }
   };
 
 
@@ -50,10 +80,10 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
         w-80 pt-6 px-6
         ${currentView === 'home' ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         transition-transform duration-300 ease-in-out
-      `} style={{ width: '320px' }}>
+      `} style={{ width: '320px' }} role="navigation" aria-label="Main Navigation">
         
         {/* Header Section */}
-        <div className="p-4">
+        <div className="p-4" role="banner">
           <div className="flex items-center space-x-3">
             <img src={motoLogo} alt="Moto AI Logo" className="w-8 h-8" />
             <span className="text-xl font-semibold text-gray-900">IT Assist</span>
@@ -61,7 +91,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
         </div>
         
         {/* Assistants Section */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" role="main">
           <div className="p-4">
             <button
               onClick={() => onViewChange('assistants')}
@@ -70,6 +100,7 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
                   ? 'bg-blue-50 text-blue-700' 
                   : 'hover:bg-gray-50'
               }`}
+              aria-pressed={currentView === 'assistants'}
             >
               <span className={`text-base font-medium ${
                 currentView === 'assistants' ? 'text-blue-700' : 'text-gray-900'
@@ -85,79 +116,36 @@ export const LeftNavigation: React.FC<LeftNavigationProps> = ({ currentView, onV
             </button>
 
             {/* Threads Section */}
-            <button
-              onClick={() => onViewChange('threads')}
-              className={`flex items-center justify-between w-full text-left mb-2 group p-2 rounded-lg transition-colors ${
-                currentView === 'threads' 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              <span className={`text-base font-medium ${
-                currentView === 'threads' ? 'text-blue-700' : 'text-gray-900'
-              }`}>Threads</span>
-              <img 
-                src={SquareEditOutline} 
-                alt="Edit" 
-                className={`w-5 h-5 ${
-                  currentView === 'threads' ? 'opacity-100' : 'opacity-60'
-                } group-hover:opacity-100 transition-opacity`} 
-                style={{ filter: 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)' }}
-              />
-            </button>
+            <div className="mb-2">
+              <button
+                onClick={() => onViewChange('threads')}
+                className={`flex items-center justify-between w-full text-left group p-2 rounded-lg transition-colors ${
+                  currentView === 'threads' 
+                    ? 'bg-blue-50 text-blue-700' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <span className={`text-base font-medium ${
+                  currentView === 'threads' ? 'text-blue-700' : 'text-gray-900'
+                }`}>Threads</span>
+                <AddThreadButton 
+                  onAddThread={handleAddThread}
+                  disabled={false}
+                />
+              </button>
+            </div>
 
             {/* Thread Items */}
             <div className="space-y-1 mt-2">
-              {threads.map((thread) => {
-                const isSelected = selectedThread === thread.id;
-                const isMenuOpen = openMenuId === thread.id;
-                
-                return (
-                  <div key={thread.id} className="relative">
-                    <div
-                      className={`flex items-center justify-between p-2 rounded-lg group cursor-pointer transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-50 text-blue-700' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => handleThreadClick(thread.id)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <img 
-                          src={QuestionAnswerOutlined} 
-                          alt="Question Answer" 
-                          className={`w-5 h-5 ${isSelected ? 'opacity-100' : 'opacity-60'}`}
-                          style={{ 
-                            filter: isSelected 
-                              ? 'brightness(0) saturate(100%) invert(20%) sepia(100%) saturate(2000%) hue-rotate(240deg) brightness(0.8) contrast(1.2)'
-                              : 'brightness(0) saturate(100%) invert(9%) sepia(4%) saturate(1554%) hue-rotate(169deg) brightness(95%) contrast(89%)'
-                          }}
-                        />
-                        <div>
-                          <div className={`text-sm ${isSelected ? 'text-blue-700' : ''}`} style={{ color: isSelected ? undefined : '#171717' }}>{thread.name}</div>
-                          <div className={`text-xs ${isSelected ? 'text-blue-700' : 'text-gray-500'}`}>{thread.date}</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => handleMenuToggle(thread.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
-                      >
-                        <svg className="w-5 h-5" fill="#171717" viewBox="0 0 24 24">
-                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    {isMenuOpen && (
-                      <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                        <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2">
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {threads.map((thread) => (
+                <ThreadItem
+                  key={thread.id}
+                  thread={thread}
+                  isSelected={selectedThread === thread.id}
+                  onSelect={handleThreadClick}
+                  onDelete={handleDeleteThread}
+                />
+              ))}
             </div>
 
           </div>

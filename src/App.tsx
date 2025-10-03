@@ -4,13 +4,14 @@ import { CenterContent } from './components/CenterContent/CenterContent';
 import { DeploymentPlannerPage } from './components/DeploymentPlannerPage/DeploymentPlannerPage';
 import { AssistantsPage } from './components/AssistantsPage';
 import { ThreadsPage } from './components/ThreadsPage';
+// Thread service is imported by LeftNavigation component
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedThread, setSelectedThread] = useState<number | null>(0);
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
-  const [isNewThread, setIsNewThread] = useState(false);
+  const [isNewThread, setIsNewThread] = useState(true); // Start as true for initial load
   const [deploymentInitialQuery, setDeploymentInitialQuery] = useState<string | null>(null);
 
 
@@ -48,7 +49,7 @@ function App() {
     setSelectedWorkflow('new-workflow');
     setCurrentView('deploymentPlanner');
     setIsMobileMenuOpen(false);
-    setSelectedThread(null);
+    // Keep selectedThread - don't clear it since deployment was initiated from a thread
   };
 
   return (

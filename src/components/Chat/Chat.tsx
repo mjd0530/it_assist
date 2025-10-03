@@ -1,26 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Message } from '../../types';
-import { mockMessages, threadConversations } from '../../services/mockData';
+import { threadConversations } from '../../services/mockData';
 import { aiService } from '../../services/aiService';
-import aiIcon from '../../assets/ai_icon_color.svg';
+import { threadService } from '../../services/threadService';
 import { AIInputField } from '../AIInputField';
 import { RocketLaunchOutlined, QuestionAnswerOutlined, BuildOutlined } from '@mui/icons-material';
 import { UserMessage, AIMessage, LoadingMessage } from '../MessageBubbles';
+import { FirstTimeUse } from '../FirstTimeUse';
 
 interface ChatProps {
   className?: string;
   threadId?: number;
+  isNewThread?: boolean;
+  onStartDeploymentPlan?: (initialQuery: string) => void;
 }
 
-export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
+export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, onStartDeploymentPlan }) => {
+  // Load messages for this thread
+  const loadMessagesForThread = (id: number) => {
+    // Check threadService first
+    const savedMessages = threadService.getThreadMessages(id);
+    if (savedMessages.length > 0) {
+      return savedMessages;
+    }
+    // Fall back to demo data for pre-existing threads
+    return threadConversations[id as keyof typeof threadConversations] || [];
+  };
+
   const [messages, setMessages] = useState<Message[]>(() => {
-    return threadConversations[threadId as keyof typeof threadConversations] || mockMessages;
+    return isNewThread ? [] : loadMessagesForThread(threadId);
   });
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shouldAutoFocus, setShouldAutoFocus] = useState(isNewThread);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -39,10 +54,17 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
     scrollToBottom();
   }, [messages]);
 
+  // When threadId or isNewThread changes, load the appropriate messages
   useEffect(() => {
-    const threadMessages = threadConversations[threadId as keyof typeof threadConversations] || mockMessages;
-    setMessages(threadMessages);
-  }, [threadId]);
+    if (isNewThread) {
+      setMessages([]);
+      setShouldAutoFocus(true);
+    } else {
+      const loadedMessages = loadMessagesForThread(threadId);
+      setMessages(loadedMessages);
+      setShouldAutoFocus(false);
+    }
+  }, [threadId, isNewThread]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -61,6 +83,20 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
   const handleSendMessage = async (message: string, _fileAttachments?: File[]) => {
     if (!message.trim() || isLoading) return;
 
+    // Check if this is deployment intent
+    const lower = message.toLowerCase();
+    const isDeploymentIntent =
+      lower.includes('deploy') ||
+      lower.includes('deployment') ||
+      lower.includes('update plan') ||
+      lower.includes('bios updates') ||
+      lower.includes('driver updates');
+
+    if (isDeploymentIntent && onStartDeploymentPlan) {
+      onStartDeploymentPlan(message);
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: message,
@@ -68,10 +104,19 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInputValue('');
     setAttachments([]);
     setIsLoading(true);
+
+    // Save messages immediately after user sends
+    threadService.setThreadMessages(threadId, newMessages);
+
+    // Update thread status to loading
+    if (threadId !== null && threadId !== undefined) {
+      threadService.updateThreadStatus(threadId, 'loading');
+    }
 
     // Generate AI response
     try {
@@ -82,7 +127,17 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
         role: 'assistant',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
+      
+      const messagesWithAI = [...newMessages, aiMessage];
+      setMessages(messagesWithAI);
+      
+      // Save messages after AI response
+      threadService.setThreadMessages(threadId, messagesWithAI);
+      
+      // Update thread status to completed
+      if (threadId !== null && threadId !== undefined) {
+        threadService.updateThreadStatus(threadId, 'completed');
+      }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -90,7 +145,17 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
         role: 'assistant',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      
+      const messagesWithError = [...newMessages, errorMessage];
+      setMessages(messagesWithError);
+      
+      // Save messages even with error
+      threadService.setThreadMessages(threadId, messagesWithError);
+      
+      // Update thread status to error
+      if (threadId !== null && threadId !== undefined) {
+        threadService.updateThreadStatus(threadId, 'error');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -116,6 +181,19 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
   
   
 
+  // Show FirstTimeUse for new threads or empty threads
+  if (messages.length === 0) {
+    return (
+      <FirstTimeUse 
+        key={`first-time-${threadId}`}
+        onPromptClick={handleSendMessage}
+        onStartDeploymentPlan={onStartDeploymentPlan}
+        isLoading={isLoading}
+        autoFocusInput={shouldAutoFocus}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-1 h-full">
       {/* Main Content Area */}
@@ -125,17 +203,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0 }) => {
           <div className="flex-1 overflow-y-auto p-8 pb-8 min-h-0">
             <div className="min-h-full flex flex-col justify-end">
               <div className="w-full max-w-2xl mx-auto space-y-6 pb-8">
-                {messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <div className="w-16 h-16 flex items-center justify-center mb-4">
-                      <img src={aiIcon} alt="AI Icon" className="w-16 h-16" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Start a conversation</h3>
-                    <p className="text-gray-500 max-w-sm">
-                      Ask me anything! I can help with coding, problem-solving, creative writing, and much more.
-                    </p>
-                  </div>
-                ) : (
+                {messages.length > 0 && (
                   <div className="space-y-4">
                     {messages.map((message) => (
                       <div key={message.id} className="animate-fade-in">

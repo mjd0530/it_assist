@@ -13,9 +13,10 @@ interface FirstTimeUseProps {
   onPromptClick: (prompt: string) => void;
   onStartDeploymentPlan?: (initialQuery: string) => void;
   isLoading?: boolean;
+  autoFocusInput?: boolean;
 }
 
-export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false }) => {
+export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false, autoFocusInput = true }) => {
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
@@ -185,7 +186,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
             placeholder="Ask me anything..."
             disabled={isLoading}
             isLoading={isLoading}
-            autoFocus={true}
+            autoFocus={autoFocusInput}
             selectedAssistant={selectedAssistant}
             onClearAssistant={() => setSelectedAssistant(null)}
             onPlusClick={() => setMenuOpen((o) => !o)}

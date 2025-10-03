@@ -52,9 +52,24 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
   // Auto-focus when component mounts if autoFocus is true
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
-      textareaRef.current.focus();
+      // Small delay to ensure the component is fully rendered
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
     }
   }, [autoFocus]);
+
+  // Additional focus attempt on mount for initial page load
+  useEffect(() => {
+    if (autoFocus) {
+      // Longer delay for initial page load to ensure everything is ready
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, []); // Empty deps - only runs on mount
 
   // Auto-resize textarea
   useEffect(() => {
@@ -213,6 +228,7 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
             disabled={disabled}
+            autoFocus={autoFocus}
             className={`
               w-full resize-none bg-transparent focus:outline-none text-gray-900 placeholder-gray-500
               ${disabled ? 'cursor-not-allowed' : 'cursor-text'}

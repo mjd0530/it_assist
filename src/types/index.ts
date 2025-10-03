@@ -6,6 +6,16 @@ export interface Message {
   isLoading?: boolean;
 }
 
+export interface Thread {
+  id: number;
+  name: string;
+  date: string;
+  status: 'idle' | 'loading' | 'completed' | 'error';
+  lastMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface ChatSession {
   id: string;
   title: string;
