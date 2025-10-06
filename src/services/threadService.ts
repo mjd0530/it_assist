@@ -33,7 +33,7 @@ class ThreadService {
     {
       id: 0,
       name: "New thread",
-      date: new Date().toLocaleString(),
+      date: this.formatDate(new Date()), // Keep for backward compatibility
       status: 'idle',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -50,6 +50,18 @@ class ThreadService {
   // Track active deployment timers
   private deploymentTimers: Map<number, DeploymentTimer> = new Map();
 
+  // Helper function to format date without seconds
+  private formatDate(date: Date): string {
+    return date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
   getThreads(): Thread[] {
     return [...this.threads].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
@@ -59,7 +71,7 @@ class ThreadService {
     const newThread: Thread = {
       id: this.nextId++,
       name: "New thread",
-      date: now.toLocaleString(),
+      date: this.formatDate(now), // Keep for backward compatibility
       status: 'idle',
       createdAt: now,
       updatedAt: now
@@ -73,8 +85,10 @@ class ThreadService {
   updateThreadStatus(id: number, status: Thread['status']): void {
     const thread = this.threads.find(t => t.id === id);
     if (thread) {
+      const now = new Date();
       thread.status = status;
-      thread.updatedAt = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
     }
   }
 
@@ -99,8 +113,10 @@ class ThreadService {
   updateThreadName(id: number, name: string): void {
     const thread = this.threads.find(t => t.id === id);
     if (thread) {
+      const now = new Date();
       thread.name = name;
-      thread.updatedAt = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
     }
   }
 
@@ -116,7 +132,9 @@ class ThreadService {
     // Update thread's updatedAt timestamp
     const thread = this.threads.find(t => t.id === id);
     if (thread) {
-      thread.updatedAt = new Date();
+      const now = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
       
       // Update thread name based on first user message if still "New thread"
       if (thread.name === 'New thread' && messages.length > 0) {
@@ -151,7 +169,9 @@ class ThreadService {
       totalStages: STAGE_TITLES.length,
       stageName: STAGE_TITLES[0]
     };
-    thread.updatedAt = new Date();
+    const now = new Date();
+    thread.updatedAt = now;
+    thread.date = this.formatDate(now); // Keep in sync for backward compatibility
     
     // Start background timer
     const startTime = Date.now();
@@ -190,9 +210,11 @@ class ThreadService {
     
     // Update thread progress if stage has changed
     if (thread.deploymentProgress.currentStage !== currentStageIndex + 1) {
+      const now = new Date();
       thread.deploymentProgress.currentStage = currentStageIndex + 1;
       thread.deploymentProgress.stageName = STAGE_TITLES[currentStageIndex];
-      thread.updatedAt = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
     }
   }
   
@@ -209,9 +231,11 @@ class ThreadService {
   updateDeploymentProgress(id: number, currentStage: number, stageName: string): void {
     const thread = this.threads.find(t => t.id === id);
     if (thread && thread.deploymentProgress) {
+      const now = new Date();
       thread.deploymentProgress.currentStage = currentStage;
       thread.deploymentProgress.stageName = stageName;
-      thread.updatedAt = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
     }
   }
 
@@ -225,7 +249,9 @@ class ThreadService {
         totalStages: thread.deploymentProgress?.totalStages || STAGE_TITLES.length,
         stageName: 'Completed'
       };
-      thread.updatedAt = new Date();
+      const now = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
       this.stopDeploymentTimer(id);
     }
   }
@@ -234,8 +260,10 @@ class ThreadService {
   clearDeploymentProgress(id: number): void {
     const thread = this.threads.find(t => t.id === id);
     if (thread) {
+      const now = new Date();
       thread.deploymentProgress = undefined;
-      thread.updatedAt = new Date();
+      thread.updatedAt = now;
+      thread.date = this.formatDate(now); // Keep in sync for backward compatibility
       this.stopDeploymentTimer(id);
     }
   }

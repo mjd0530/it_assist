@@ -18,13 +18,47 @@ interface ChatProps {
 export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, onStartDeploymentPlan }) => {
   // Load messages for this thread
   const loadMessagesForThread = (id: number) => {
+    console.log(`Loading messages for thread ${id}`);
+    
     // Check threadService first
     const savedMessages = threadService.getThreadMessages(id);
+    console.log(`Regular thread messages:`, savedMessages);
     if (savedMessages.length > 0) {
       return savedMessages;
     }
+    
+    // Check if there are deployment messages stored in deployment state
+    const deploymentState = threadService.getDeploymentState(id);
+    console.log(`Deployment state:`, deploymentState);
+    if (deploymentState && deploymentState.messages.length > 0) {
+      console.log(`Found deployment messages:`, deploymentState.messages);
+      return deploymentState.messages;
+    }
+    
     // Fall back to demo data for pre-existing threads
-    return threadConversations[id as keyof typeof threadConversations] || [];
+    const demoMessages = threadConversations[id as keyof typeof threadConversations] || [];
+    console.log(`Demo messages:`, demoMessages);
+    return demoMessages;
+  };
+
+  // Save messages to both regular thread messages and deployment state if it exists
+  const saveMessagesToThread = (id: number, messages: Message[]) => {
+    console.log(`Saving messages to thread ${id}:`, messages);
+    
+    // Always save to regular thread messages
+    threadService.setThreadMessages(id, messages);
+    
+    // Also save to deployment state if it exists
+    const deploymentState = threadService.getDeploymentState(id);
+    if (deploymentState) {
+      console.log(`Also saving to deployment state for thread ${id}`);
+      threadService.saveDeploymentState(id, {
+        ...deploymentState,
+        messages: messages
+      });
+    } else {
+      console.log(`No deployment state found for thread ${id}`);
+    }
   };
 
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -111,7 +145,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     setIsLoading(true);
 
     // Save messages immediately after user sends
-    threadService.setThreadMessages(threadId, newMessages);
+    saveMessagesToThread(threadId, newMessages);
 
     // Generate AI response
     try {
@@ -127,7 +161,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
       setMessages(messagesWithAI);
       
       // Save messages after AI response
-      threadService.setThreadMessages(threadId, messagesWithAI);
+      saveMessagesToThread(threadId, messagesWithAI);
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -140,7 +174,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
       setMessages(messagesWithError);
       
       // Save messages even with error
-      threadService.setThreadMessages(threadId, messagesWithError);
+      saveMessagesToThread(threadId, messagesWithError);
     } finally {
       setIsLoading(false);
     }
