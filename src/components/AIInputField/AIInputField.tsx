@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useImperativeHandle } from 'react';
-import { Plus, Mic, Send, Paperclip, X } from 'lucide-react';
+import { Plus, Mic, Send, X, FileText, File as FileIcon, Image as ImageIcon } from 'lucide-react';
 
 export interface AIInputFieldProps {
   value: string;
@@ -154,6 +154,43 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
     }
   }), [disabled]);
 
+  // Helper to get file icon and type label
+  const getFileInfo = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    
+    // Document types
+    if (['doc', 'docx'].includes(ext)) {
+      return { icon: <FileText className="w-5 h-5 text-blue-600" />, type: 'Word', color: 'bg-blue-50' };
+    }
+    if (['pdf'].includes(ext)) {
+      return { icon: <FileText className="w-5 h-5 text-red-600" />, type: 'PDF', color: 'bg-red-50' };
+    }
+    if (['xls', 'xlsx'].includes(ext)) {
+      return { icon: <FileText className="w-5 h-5 text-green-600" />, type: 'Excel', color: 'bg-green-50' };
+    }
+    if (['ppt', 'pptx'].includes(ext)) {
+      return { icon: <FileText className="w-5 h-5 text-orange-600" />, type: 'PowerPoint', color: 'bg-orange-50' };
+    }
+    if (['txt'].includes(ext)) {
+      return { icon: <FileText className="w-5 h-5 text-gray-600" />, type: 'Text', color: 'bg-gray-50' };
+    }
+    
+    // Image types
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+      return { icon: <ImageIcon className="w-5 h-5 text-purple-600" />, type: 'Image', color: 'bg-purple-50' };
+    }
+    
+    // Default
+    return { icon: <FileIcon className="w-5 h-5 text-gray-600" />, type: 'File', color: 'bg-gray-50' };
+  };
+
+  // Helper to format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes}B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  };
+
   const canSend = value.trim() || attachments.length > 0;
 
   return (
@@ -193,26 +230,42 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
       >
         {/* Attachment previews */}
         {attachments.length > 0 && (
-          <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+          <div className="px-4 pt-3 pb-2">
             <div className="flex flex-wrap gap-2">
-              {attachments.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 text-sm"
-                >
-                  <Paperclip className="w-4 h-4 text-gray-600" />
-                  <span className="text-gray-700 truncate max-w-32">
-                    {file.name}
-                  </span>
-                  <button
-                    onClick={() => removeAttachment(index)}
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
-                    disabled={disabled}
+              {attachments.map((file, index) => {
+                const fileInfo = getFileInfo(file);
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-sm"
                   >
-                    ×
-                  </button>
-                </div>
-              ))}
+                    {/* File icon */}
+                    <div className={`w-10 h-10 ${fileInfo.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      {fileInfo.icon}
+                    </div>
+                    
+                    {/* File info */}
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium text-gray-900 truncate max-w-48">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {fileInfo.type} · {formatFileSize(file.size)}
+                      </span>
+                    </div>
+                    
+                    {/* Remove button */}
+                    <button
+                      onClick={() => removeAttachment(index)}
+                      className="ml-2 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                      disabled={disabled}
+                      aria-label="Remove file"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

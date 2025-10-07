@@ -20,6 +20,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<AIInputFieldHandle>(null);
@@ -190,6 +191,8 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
             selectedAssistant={selectedAssistant}
             onClearAssistant={() => setSelectedAssistant(null)}
             onPlusClick={() => setMenuOpen((o) => !o)}
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
           />
 
           {/* Assistant selection menu */}
