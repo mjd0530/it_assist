@@ -21,9 +21,11 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [menuPosition, setMenuPosition] = useState<'top' | 'bottom'>('bottom');
   const menuRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<AIInputFieldHandle>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
@@ -143,6 +145,22 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
     };
   }, [menuOpen]);
 
+  // Calculate menu position when opening
+  useEffect(() => {
+    if (menuOpen && inputContainerRef.current) {
+      const rect = inputContainerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const menuHeight = 350; // Approximate height of the menu with divider
+      
+      // If not enough space below, show menu above
+      if (spaceBelow < menuHeight) {
+        setMenuPosition('top');
+      } else {
+        setMenuPosition('bottom');
+      }
+    }
+  }, [menuOpen]);
+
   const handleAssistantSelect = (assistant: { key: string; name: string; icon?: React.ReactNode }) => {
     if (assistant.key === 'file') {
       // Open file picker instead of adding a chip
@@ -178,7 +196,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
         </h1>
 
         {/* Input Field */}
-        <div className={`w-full max-w-2xl mb-8 relative transition-transform duration-500 ease-in-out`}>
+        <div ref={inputContainerRef} className={`w-full max-w-2xl mb-8 relative transition-transform duration-500 ease-in-out`}>
           <AIInputField
             ref={inputRef}
             value={inputValue}
@@ -199,7 +217,9 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
           {menuOpen && (
             <div
               ref={menuRef}
-              className="absolute left-2 top-14 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95"
+              className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95 ${
+                menuPosition === 'top' ? 'bottom-14' : 'top-14'
+              }`}
               role="menu"
               aria-label="Select assistant"
             >

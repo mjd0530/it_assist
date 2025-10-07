@@ -70,8 +70,10 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
   const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shouldAutoFocus, setShouldAutoFocus] = useState(isNewThread);
+  const [menuPosition, setMenuPosition] = useState<'top' | 'bottom'>('bottom');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
 
   // Assistant options
   const assistants = [
@@ -111,6 +113,22 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     if (menuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [menuOpen]);
+
+  // Calculate menu position when opening
+  useEffect(() => {
+    if (menuOpen && inputContainerRef.current) {
+      const rect = inputContainerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const menuHeight = 300; // Approximate height of the menu
+      
+      // If not enough space below, show menu above
+      if (spaceBelow < menuHeight) {
+        setMenuPosition('top');
+      } else {
+        setMenuPosition('bottom');
+      }
     }
   }, [menuOpen]);
 
@@ -242,7 +260,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
                 )}
 
                 {/* Unified input at the bottom */}
-                <div className="mt-4 sticky bottom-8 relative">
+                <div ref={inputContainerRef} className="mt-4 sticky bottom-8 relative">
                   <AIInputField
                     value={inputValue}
                     onChange={setInputValue}
@@ -263,7 +281,9 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
                   {menuOpen && (
                     <div
                       ref={menuRef}
-                      className="absolute left-2 top-14 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95"
+                      className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95 ${
+                        menuPosition === 'top' ? 'bottom-14' : 'top-14'
+                      }`}
                       role="menu"
                       aria-label="Select assistant"
                     >
