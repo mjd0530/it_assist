@@ -5,11 +5,59 @@ import { AssistantForm } from '../AssistantForm';
 import type { CustomAssistant } from '../AssistantForm';
 import { customAssistantService } from '../../services/customAssistantService';
 
+// Define provided assistants that come with the app
+interface ProvidedAssistant {
+  id: string;
+  name: string;
+  description: string;
+  category: 'deployment' | 'ticketManagement' | 'powerManagement' | 'applicationManagement' | 'adaptiveDeviceConfiguration';
+}
+
+const PROVIDED_ASSISTANTS: ProvidedAssistant[] = [
+  {
+    id: 'deployment',
+    name: 'Deployment Assistant',
+    description: '(Mobile Device Management) agents for configuring and securing mobile devices.',
+    category: 'deployment',
+  },
+  {
+    id: 'applicationManagement',
+    name: 'Application Management Assistant',
+    description: 'Remote Monitoring and Management agents for MSPs and IT teams.',
+    category: 'applicationManagement',
+  },
+  {
+    id: 'ticketManagement',
+    name: 'Ticket Assistant',
+    description: 'Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...',
+    category: 'ticketManagement',
+  },
+  {
+    id: 'adaptiveDeviceConfiguration',
+    name: 'Adaptive Device Configuration A...',
+    description: 'Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...',
+    category: 'adaptiveDeviceConfiguration',
+  },
+  {
+    id: 'powerManagement',
+    name: 'Power Management Assistant',
+    description: 'Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...',
+    category: 'powerManagement',
+  },
+  {
+    id: 'pmaAssistant',
+    name: 'PMA assistant',
+    description: 'Advanced device configuration and management for adaptive IT environments.',
+    category: 'adaptiveDeviceConfiguration',
+  },
+];
+
 export const AssistantsPage: React.FC = () => {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [customAssistants, setCustomAssistants] = useState<CustomAssistant[]>([]);
   const [editingAssistant, setEditingAssistant] = useState<CustomAssistant | undefined>();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [isEditingProvided, setIsEditingProvided] = useState(false);
 
   useEffect(() => {
     loadCustomAssistants();
@@ -21,9 +69,15 @@ export const AssistantsPage: React.FC = () => {
   };
 
   const handleSaveAssistant = (assistant: Omit<CustomAssistant, 'id'>) => {
-    if (editingAssistant) {
+    if (isEditingProvided) {
+      // When editing a provided assistant, save it as a new custom assistant
+      customAssistantService.create(assistant);
+      setIsEditingProvided(false);
+    } else if (editingAssistant) {
+      // Update existing custom assistant
       customAssistantService.update(editingAssistant.id, assistant);
     } else {
+      // Create new custom assistant
       customAssistantService.create(assistant);
     }
     loadCustomAssistants();
@@ -33,6 +87,28 @@ export const AssistantsPage: React.FC = () => {
 
   const handleEditAssistant = (assistant: CustomAssistant) => {
     setEditingAssistant(assistant);
+    setView('edit');
+    setMenuOpenId(null);
+    setIsEditingProvided(false);
+  };
+
+  const handleEditProvidedAssistant = (providedAssistant: ProvidedAssistant) => {
+    // Convert provided assistant to custom assistant format for editing
+    const assistantToEdit: CustomAssistant = {
+      id: providedAssistant.id,
+      name: providedAssistant.name,
+      description: providedAssistant.description,
+      instructions: '',
+      toolIntegration: {
+        lenovoDeviceOrchestration: true,
+        serviceNow: false,
+        teams: false,
+      },
+      category: providedAssistant.category,
+      isCustom: false,
+    };
+    setEditingAssistant(assistantToEdit);
+    setIsEditingProvided(true);
     setView('edit');
     setMenuOpenId(null);
   };
@@ -48,6 +124,7 @@ export const AssistantsPage: React.FC = () => {
   const handleCancel = () => {
     setView('list');
     setEditingAssistant(undefined);
+    setIsEditingProvided(false);
   };
 
   const getCategoryIcon = (category: string) => {
@@ -250,105 +327,67 @@ export const AssistantsPage: React.FC = () => {
           
           {/* Assistant Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Deployment Assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <img src={rocketIcon} alt="Rocket" className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Deployment Assistant</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    (Mobile Device Management) agents for configuring and securing mobile devices.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Application Management Assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Application Management Assistant</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    Remote Monitoring and Management agents for MSPs and IT teams.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Ticket Assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Ticket Assistant</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Adaptive Device Configuration Assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Adaptive Device Configuration A...</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...
-                  </p>
+            {PROVIDED_ASSISTANTS.map((assistant) => (
+              <div 
+                key={assistant.id}
+                className="bg-white border border-gray-200 hover:shadow-md transition-shadow relative" 
+                style={{ borderRadius: '0.75rem' }}
+              >
+                <div className="p-6">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      {getCategoryIcon(assistant.category)}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>
+                        {assistant.name}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                        {assistant.description}
+                      </p>
+                    </div>
+                    {/* Overflow Menu Button */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setMenuOpenId(menuOpenId === assistant.id ? null : assistant.id)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="6" r="1.5"/>
+                          <circle cx="12" cy="12" r="1.5"/>
+                          <circle cx="12" cy="18" r="1.5"/>
+                        </svg>
+                      </button>
+                      
+                      {/* Dropdown Menu - Only Edit option for provided assistants */}
+                      {menuOpenId === assistant.id && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-10" 
+                            onClick={() => setMenuOpenId(null)}
+                          />
+                          <div 
+                            className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-20"
+                            style={{ borderRadius: '0.5rem' }}
+                          >
+                            <button
+                              onClick={() => handleEditProvidedAssistant(assistant)}
+                              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                              style={{ fontSize: '0.875rem' }}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                              </svg>
+                              Edit
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Power Management Assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>Power Management Assistant</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    Patch management agents (e.g., Ivanti, ManageEngine) that handle OS and app up...
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* PMA assistant */}
-            <div className="bg-white border border-gray-200 p-6 hover:shadow-md transition-shadow" style={{ borderRadius: '0.75rem' }}>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6" fill="none" stroke="#171717" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>PMA assistant</h3>
-                  <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
-                    Advanced device configuration and management for adaptive IT environments.
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

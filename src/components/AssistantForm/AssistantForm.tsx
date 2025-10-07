@@ -67,7 +67,7 @@ export const AssistantForm: React.FC<AssistantFormProps> = ({ assistant, onSave,
                 WebkitTextFillColor: 'transparent'
               }}
             >
-              Create new
+              {assistant ? 'Edit' : 'Create new'}
             </h1>
 
             {/* Name Field */}
