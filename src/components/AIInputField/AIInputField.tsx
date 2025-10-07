@@ -43,6 +43,7 @@ export const AIInputField = React.forwardRef<AIInputFieldHandle, AIInputFieldPro
   , onClearAssistant
   , onPlusClick
 }, ref) => {
+  console.log('AIInputField - selectedAssistant:', selectedAssistant);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);

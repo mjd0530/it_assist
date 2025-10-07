@@ -18,6 +18,7 @@ interface ChatProps {
 }
 
 export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, onStartDeploymentPlan, initialAssistant = null }) => {
+  console.log('Chat component render - threadId:', threadId, 'isNewThread:', isNewThread, 'initialAssistant:', initialAssistant);
   // Load messages for this thread
   const loadMessagesForThread = (id: number) => {
     console.log(`Loading messages for thread ${id}`);
@@ -76,6 +77,8 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const inputFieldRef = useRef<AIInputFieldHandle>(null);
 
+  console.log('Chat state - selectedAssistant:', selectedAssistant);
+
   // Use custom hook for menu positioning
   const menuPosition = useMenuPosition(menuOpen, inputContainerRef);
 
@@ -89,13 +92,16 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
 
   // When threadId or isNewThread changes, load the appropriate messages
   useEffect(() => {
+    console.log('Chat useEffect triggered - isNewThread:', isNewThread, 'initialAssistant:', initialAssistant);
     if (isNewThread) {
       setMessages([]);
       setShouldAutoFocus(true);
       // Set initial assistant if provided, otherwise clear it
       if (initialAssistant) {
+        console.log('Setting selectedAssistant to:', initialAssistant);
         setSelectedAssistant(initialAssistant);
       } else {
+        console.log('Clearing selectedAssistant');
         setSelectedAssistant(null);
       }
     } else {

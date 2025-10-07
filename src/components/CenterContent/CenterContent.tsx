@@ -10,6 +10,7 @@ interface CenterContentProps {
 }
 
 export const CenterContent: React.FC<CenterContentProps> = ({ selectedThread, isNewThread, onStartDeploymentPlan, initialAssistant }) => {
+  console.log('CenterContent - initialAssistant:', initialAssistant);
 
   // All threads use the Chat component, which handles empty state (FirstTimeUse) internally
   return (

@@ -76,17 +76,20 @@ function App() {
   };
 
   const handleStartThread = (assistant: AssistantOption) => {
+    console.log('handleStartThread called with assistant:', assistant);
+    
     // Create a new thread
     const newThread = threadService.addThread();
+    console.log('Created new thread:', newThread.id);
     
-    // Set the thread as selected and navigate to home view
+    // Set the assistant to be pre-populated in the chat FIRST
+    setInitialAssistant(assistant);
+    
+    // Then set the thread as selected and navigate to home view
     setSelectedThread(newThread.id);
     setIsNewThread(true);
     setCurrentView('home');
     setIsMobileMenuOpen(false);
-    
-    // Set the assistant to be pre-populated in the chat
-    setInitialAssistant(assistant);
   };
 
   return (
