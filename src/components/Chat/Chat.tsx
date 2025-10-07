@@ -92,9 +92,11 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     if (isNewThread) {
       setMessages([]);
       setShouldAutoFocus(true);
-      // Set initial assistant if provided
+      // Set initial assistant if provided, otherwise clear it
       if (initialAssistant) {
         setSelectedAssistant(initialAssistant);
+      } else {
+        setSelectedAssistant(null);
       }
     } else {
       const loadedMessages = loadMessagesForThread(threadId);
