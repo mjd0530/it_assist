@@ -261,12 +261,14 @@ export const AssistantsPage: React.FC<AssistantsPageProps> = ({ onStartThread })
                           </p>
                           <button
                             onClick={() => onStartThread?.(convertCustomToAssistantOption(assistant))}
-                            className="text-white font-medium transition-colors"
+                            className="font-medium transition-colors hover:opacity-80"
                             style={{
-                              background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
-                              borderRadius: '0.375rem',
+                              color: '#4625EB',
                               fontSize: '0.875rem',
-                              padding: '0.375rem 0.75rem'
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer'
                             }}
                           >
                             New thread
@@ -369,15 +371,17 @@ export const AssistantsPage: React.FC<AssistantsPageProps> = ({ onStartThread })
                       </p>
                       <button
                         onClick={() => onStartThread?.(convertProvidedToAssistantOption(assistant))}
-                        className="text-white font-medium transition-colors"
+                        className="font-medium transition-colors hover:opacity-80"
                         style={{
-                          background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
-                          borderRadius: '0.375rem',
+                          color: '#4625EB',
                           fontSize: '0.875rem',
-                          padding: '0.375rem 0.75rem'
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer'
                         }}
                       >
-                        Start thread
+                        New thread
                       </button>
                     </div>
                     {/* Overflow Menu Button */}
