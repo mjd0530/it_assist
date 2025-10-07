@@ -5,6 +5,7 @@ import { DeploymentPlannerPage } from './components/DeploymentPlannerPage/Deploy
 import { AssistantsPage } from './components/AssistantsPage';
 import { ThreadsPage } from './components/ThreadsPage';
 import { threadService } from './services/threadService';
+import type { AssistantOption } from './components/AssistantMenu';
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -13,6 +14,7 @@ function App() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<string | null>(null);
   const [isNewThread, setIsNewThread] = useState(true); // Start as true for initial load
   const [deploymentInitialQuery, setDeploymentInitialQuery] = useState<string | null>(null);
+  const [initialAssistant, setInitialAssistant] = useState<AssistantOption | null>(null);
 
 
 
@@ -33,6 +35,7 @@ function App() {
     setSelectedThread(threadId);
     setIsMobileMenuOpen(false);
     setIsNewThread(isNew);
+    setInitialAssistant(null); // Clear initial assistant when switching threads
     
     // Check if this thread has an active deployment OR saved deployment state
     const thread = threadService.getThread(threadId);
@@ -72,6 +75,20 @@ function App() {
     }
   };
 
+  const handleStartThread = (assistant: AssistantOption) => {
+    // Create a new thread
+    const newThread = threadService.addThread();
+    
+    // Set the thread as selected and navigate to home view
+    setSelectedThread(newThread.id);
+    setIsNewThread(true);
+    setCurrentView('home');
+    setIsMobileMenuOpen(false);
+    
+    // Set the assistant to be pre-populated in the chat
+    setInitialAssistant(assistant);
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8FAFC' }}>
       {/* Main Layout */}
@@ -93,23 +110,30 @@ function App() {
             threadId={selectedThread}
           />
         ) : currentView === 'assistants' ? (
-          <AssistantsPage />
+          <AssistantsPage onStartThread={handleStartThread} />
         ) : currentView === 'threads' ? (
           <ThreadsPage 
             onThreadSelect={(threadId) => {
               setSelectedThread(threadId);
               setCurrentView('home');
               setIsNewThread(false);
+              setInitialAssistant(null);
             }}
             onNewThread={() => {
               const newThread = threadService.addThread();
               setSelectedThread(newThread.id);
               setCurrentView('home');
               setIsNewThread(true);
+              setInitialAssistant(null);
             }}
           />
         ) : (
-          <CenterContent selectedThread={selectedThread} isNewThread={isNewThread} onStartDeploymentPlan={handleStartDeploymentPlan} />
+          <CenterContent 
+            selectedThread={selectedThread} 
+            isNewThread={isNewThread} 
+            onStartDeploymentPlan={handleStartDeploymentPlan}
+            initialAssistant={initialAssistant}
+          />
         )}
       </div>
     </div>

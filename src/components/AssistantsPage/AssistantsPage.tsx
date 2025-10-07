@@ -4,6 +4,7 @@ import rocketIcon from '../../assets/RocketLaunchOutlined.svg';
 import { AssistantForm } from '../AssistantForm';
 import type { CustomAssistant } from '../AssistantForm';
 import { customAssistantService } from '../../services/customAssistantService';
+import type { AssistantOption } from '../AssistantMenu';
 
 // Define provided assistants that come with the app
 interface ProvidedAssistant {
@@ -52,7 +53,11 @@ const PROVIDED_ASSISTANTS: ProvidedAssistant[] = [
   },
 ];
 
-export const AssistantsPage: React.FC = () => {
+interface AssistantsPageProps {
+  onStartThread?: (assistant: AssistantOption) => void;
+}
+
+export const AssistantsPage: React.FC<AssistantsPageProps> = ({ onStartThread }) => {
   const [view, setView] = useState<'list' | 'create' | 'edit'>('list');
   const [customAssistants, setCustomAssistants] = useState<CustomAssistant[]>([]);
   const [editingAssistant, setEditingAssistant] = useState<CustomAssistant | undefined>();
@@ -164,6 +169,22 @@ export const AssistantsPage: React.FC = () => {
     }
   };
 
+  // Convert ProvidedAssistant to AssistantOption
+  const convertProvidedToAssistantOption = (assistant: ProvidedAssistant): AssistantOption => ({
+    key: assistant.id,
+    name: assistant.name,
+    icon: getCategoryIcon(assistant.category),
+    isCustom: false,
+  });
+
+  // Convert CustomAssistant to AssistantOption
+  const convertCustomToAssistantOption = (assistant: CustomAssistant): AssistantOption => ({
+    key: assistant.id,
+    name: assistant.name,
+    icon: getCategoryIcon(assistant.category),
+    isCustom: true,
+  });
+
   if (view === 'create' || view === 'edit') {
     return (
       <AssistantForm
@@ -239,6 +260,7 @@ export const AssistantsPage: React.FC = () => {
                             {assistant.description}
                           </p>
                           <button
+                            onClick={() => onStartThread?.(convertCustomToAssistantOption(assistant))}
                             className="text-white font-medium transition-colors"
                             style={{
                               background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
@@ -342,9 +364,21 @@ export const AssistantsPage: React.FC = () => {
                       <h3 className="font-semibold text-gray-900 mb-1" style={{ fontSize: '1.125rem' }}>
                         {assistant.name}
                       </h3>
-                      <p className="text-gray-600 leading-relaxed" style={{ fontSize: '0.875rem' }}>
+                      <p className="text-gray-600 leading-relaxed mb-3" style={{ fontSize: '0.875rem' }}>
                         {assistant.description}
                       </p>
+                      <button
+                        onClick={() => onStartThread?.(convertProvidedToAssistantOption(assistant))}
+                        className="text-white font-medium transition-colors"
+                        style={{
+                          background: 'linear-gradient(135deg, #4625EB 0%, #A500BF 100%)',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          padding: '0.375rem 0.75rem'
+                        }}
+                      >
+                        Start thread
+                      </button>
                     </div>
                     {/* Overflow Menu Button */}
                     <div className="relative">

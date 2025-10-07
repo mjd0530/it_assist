@@ -14,9 +14,10 @@ interface ChatProps {
   threadId?: number;
   isNewThread?: boolean;
   onStartDeploymentPlan?: (initialQuery: string) => void;
+  initialAssistant?: AssistantOption | null;
 }
 
-export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, onStartDeploymentPlan }) => {
+export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, onStartDeploymentPlan, initialAssistant = null }) => {
   // Load messages for this thread
   const loadMessagesForThread = (id: number) => {
     console.log(`Loading messages for thread ${id}`);
@@ -68,7 +69,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(null);
+  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(initialAssistant);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shouldAutoFocus, setShouldAutoFocus] = useState(isNewThread);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -91,12 +92,16 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     if (isNewThread) {
       setMessages([]);
       setShouldAutoFocus(true);
+      // Set initial assistant if provided
+      if (initialAssistant) {
+        setSelectedAssistant(initialAssistant);
+      }
     } else {
       const loadedMessages = loadMessagesForThread(threadId);
       setMessages(loadedMessages);
       setShouldAutoFocus(false);
     }
-  }, [threadId, isNewThread]);
+  }, [threadId, isNewThread, initialAssistant]);
 
 
   const handleSendMessage = async (message: string, _fileAttachments?: File[]) => {
