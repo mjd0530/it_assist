@@ -10,15 +10,23 @@ interface FirstTimeUseProps {
   onStartDeploymentPlan?: (initialQuery: string) => void;
   isLoading?: boolean;
   autoFocusInput?: boolean;
+  initialAssistant?: AssistantOption | null;
 }
 
-export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false, autoFocusInput = true }) => {
+export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false, autoFocusInput = true, initialAssistant = null }) => {
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(null);
+  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(initialAssistant);
   const [attachments, setAttachments] = useState<File[]>([]);
   const inputRef = useRef<AIInputFieldHandle>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
+
+  // Update selectedAssistant when initialAssistant changes
+  useEffect(() => {
+    if (initialAssistant) {
+      setSelectedAssistant(initialAssistant);
+    }
+  }, [initialAssistant]);
 
   // Use custom hook for menu positioning
   const menuPosition = useMenuPosition(menuOpen, inputContainerRef);

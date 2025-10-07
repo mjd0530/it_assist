@@ -213,6 +213,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
         onStartDeploymentPlan={onStartDeploymentPlan}
         isLoading={isLoading}
         autoFocusInput={shouldAutoFocus}
+        initialAssistant={selectedAssistant}
       />
     );
   }
