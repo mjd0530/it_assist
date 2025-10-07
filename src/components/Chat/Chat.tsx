@@ -3,10 +3,11 @@ import type { Message } from '../../types';
 import { threadConversations } from '../../services/mockData';
 import { aiService } from '../../services/aiService';
 import { threadService } from '../../services/threadService';
-import { AIInputField } from '../AIInputField';
-import { RocketLaunchOutlined, QuestionAnswerOutlined, BuildOutlined } from '@mui/icons-material';
+import { AIInputField, type AIInputFieldHandle } from '../AIInputField';
 import { UserMessage, AIMessage, LoadingMessage } from '../MessageBubbles';
 import { FirstTimeUse } from '../FirstTimeUse';
+import { AssistantMenu, type AssistantOption } from '../AssistantMenu';
+import { useMenuPosition } from '../../hooks/useMenuPosition';
 
 interface ChatProps {
   className?: string;
@@ -67,20 +68,15 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
   const [inputValue, setInputValue] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
+  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shouldAutoFocus, setShouldAutoFocus] = useState(isNewThread);
-  const [menuPosition, setMenuPosition] = useState<'top' | 'bottom'>('bottom');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
+  const inputFieldRef = useRef<AIInputFieldHandle>(null);
 
-  // Assistant options
-  const assistants = [
-    { key: 'general', name: 'General Assistant', icon: <QuestionAnswerOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'troubleshooting', name: 'Troubleshooting', icon: <BuildOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-  ];
+  // Use custom hook for menu positioning
+  const menuPosition = useMenuPosition(menuOpen, inputContainerRef);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,35 +98,6 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     }
   }, [threadId, isNewThread]);
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-
-    if (menuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [menuOpen]);
-
-  // Calculate menu position when opening
-  useEffect(() => {
-    if (menuOpen && inputContainerRef.current) {
-      const rect = inputContainerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const menuHeight = 300; // Approximate height of the menu
-      
-      // If not enough space below, show menu above
-      if (spaceBelow < menuHeight) {
-        setMenuPosition('top');
-      } else {
-        setMenuPosition('bottom');
-      }
-    }
-  }, [menuOpen]);
 
   const handleSendMessage = async (message: string, _fileAttachments?: File[]) => {
     if (!message.trim() || isLoading) return;
@@ -208,7 +175,13 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
     // Handle voice recording logic here
   };
 
-  const handleAssistantSelect = (assistant: { key: string; name: string; icon?: React.ReactNode }) => {
+  const handleAssistantSelect = (assistant: AssistantOption) => {
+    if (assistant.key === 'file') {
+      // Open file picker instead of adding a chip
+      inputFieldRef.current?.openFilePicker();
+      setMenuOpen(false);
+      return;
+    }
     setSelectedAssistant(assistant);
     setMenuOpen(false);
   };
@@ -262,6 +235,7 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
                 {/* Unified input at the bottom */}
                 <div ref={inputContainerRef} className="mt-4 sticky bottom-8 relative">
                   <AIInputField
+                    ref={inputFieldRef}
                     value={inputValue}
                     onChange={setInputValue}
                     onSend={handleSendMessage}
@@ -278,28 +252,12 @@ export const Chat: React.FC<ChatProps> = ({ threadId = 0, isNewThread = false, o
                   />
 
                   {/* Assistant selection menu */}
-                  {menuOpen && (
-                    <div
-                      ref={menuRef}
-                      className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95 ${
-                        menuPosition === 'top' ? 'bottom-14' : 'top-14'
-                      }`}
-                      role="menu"
-                      aria-label="Select assistant"
-                    >
-                      {assistants.map((a) => (
-                        <button
-                          key={a.key}
-                          className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                          onClick={() => handleAssistantSelect(a)}
-                          role="menuitem"
-                        >
-                          <span className="w-6 h-6 flex items-center justify-center rounded-md">{a.icon}</span>
-                          <span className="text-sm text-slate-900">{a.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <AssistantMenu
+                    isOpen={menuOpen}
+                    onClose={() => setMenuOpen(false)}
+                    onSelect={handleAssistantSelect}
+                    position={menuPosition}
+                  />
                 </div>
               </div>
             </div>

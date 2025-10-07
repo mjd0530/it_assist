@@ -2,12 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import motoLogo from '../../assets/moto_ai_prc.svg';
 import { AIInputField } from '../AIInputField';
 import type { AIInputFieldHandle } from '../AIInputField';
-import ConfirmationNumberOutlined from '@mui/icons-material/ConfirmationNumberOutlined';
-import PowerOutlined from '@mui/icons-material/PowerOutlined';
-import AppsOutlined from '@mui/icons-material/AppsOutlined';
-import RocketLaunchOutlined from '@mui/icons-material/RocketLaunchOutlined';
-import BuildOutlined from '@mui/icons-material/BuildOutlined';
-import InsertDriveFileOutlined from '@mui/icons-material/InsertDriveFileOutlined';
+import { AssistantMenu, type AssistantOption } from '../AssistantMenu';
+import { useMenuPosition } from '../../hooks/useMenuPosition';
 
 interface FirstTimeUseProps {
   onPromptClick: (prompt: string) => void;
@@ -19,13 +15,13 @@ interface FirstTimeUseProps {
 export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onStartDeploymentPlan, isLoading = false, autoFocusInput = true }) => {
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedAssistant, setSelectedAssistant] = useState<{ key: string; name: string; icon?: React.ReactNode } | null>(null);
+  const [selectedAssistant, setSelectedAssistant] = useState<AssistantOption | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [menuPosition, setMenuPosition] = useState<'top' | 'bottom'>('bottom');
-  const menuRef = useRef<HTMLDivElement>(null);
-  const plusBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<AIInputFieldHandle>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
+
+  // Use custom hook for menu positioning
+  const menuPosition = useMenuPosition(menuOpen, inputContainerRef);
 
   const handleSendMessage = () => {
     if (!inputValue.trim() || isLoading) return;
@@ -46,16 +42,6 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
     "What are the key features available in Policy Management?",
     "How can I register a new Windows device?"
   ];
-
-  // Assistant definitions
-  const assistants = [
-    { key: 'ticket', name: 'Ticket', icon: <ConfirmationNumberOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'power', name: 'Power', icon: <PowerOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'application', name: 'Application', icon: <AppsOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'deployment', name: 'Deployment', icon: <RocketLaunchOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'device', name: 'Device Configuration', icon: <BuildOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-    { key: 'file', name: 'File', icon: <InsertDriveFileOutlined fontSize="small" sx={{ color: '#0F172A' }} /> },
-  ] as const;
 
   // Prompts by assistant
   const defaultPrompts = suggestedPrompts;
@@ -125,43 +111,7 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
     }
   }, [selectedAssistant]);
 
-  // Close on outside click / Esc
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (!menuOpen) return;
-      const target = e.target as Node;
-      if (menuRef.current && !menuRef.current.contains(target) && !plusBtnRef.current?.contains(target)) {
-        setMenuOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', onClick);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onClick);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [menuOpen]);
-
-  // Calculate menu position when opening
-  useEffect(() => {
-    if (menuOpen && inputContainerRef.current) {
-      const rect = inputContainerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const menuHeight = 350; // Approximate height of the menu with divider
-      
-      // If not enough space below, show menu above
-      if (spaceBelow < menuHeight) {
-        setMenuPosition('top');
-      } else {
-        setMenuPosition('bottom');
-      }
-    }
-  }, [menuOpen]);
-
-  const handleAssistantSelect = (assistant: { key: string; name: string; icon?: React.ReactNode }) => {
+  const handleAssistantSelect = (assistant: AssistantOption) => {
     if (assistant.key === 'file') {
       // Open file picker instead of adding a chip
       inputRef.current?.openFilePicker();
@@ -214,37 +164,12 @@ export const FirstTimeUse: React.FC<FirstTimeUseProps> = ({ onPromptClick, onSta
           />
 
           {/* Assistant selection menu */}
-          {menuOpen && (
-            <div
-              ref={menuRef}
-              className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95 ${
-                menuPosition === 'top' ? 'bottom-14' : 'top-14'
-              }`}
-              role="menu"
-              aria-label="Select assistant"
-            >
-              {assistants.slice(0,5).map((a) => (
-                <button
-                  key={a.key}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                  onClick={() => handleAssistantSelect(a)}
-                  role="menuitem"
-                >
-                  <span className="w-6 h-6 flex items-center justify-center rounded-md">{a.icon}</span>
-                  <span className="text-sm text-slate-900">{a.name}</span>
-                </button>
-              ))}
-              <div className="my-2 mx-3 border-t border-gray-200" />
-              <button
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                onClick={() => handleAssistantSelect(assistants[5])}
-                role="menuitem"
-              >
-                <span className="w-6 h-6 flex items-center justify-center rounded-md">{assistants[5].icon}</span>
-                <span className="text-sm text-slate-900">{assistants[5].name}</span>
-              </button>
-            </div>
-          )}
+          <AssistantMenu
+            isOpen={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            onSelect={handleAssistantSelect}
+            position={menuPosition}
+          />
         </div>
 
         {/* Suggested Questions - Contained Card List (dynamic) */}
