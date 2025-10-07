@@ -98,64 +98,66 @@ export const AssistantMenu: React.FC<AssistantMenuProps> = ({
   return (
     <div
       ref={menuRef}
-      className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-2 animate-in fade-in zoom-in-95 ${
+      className={`absolute left-2 z-50 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl animate-in fade-in zoom-in-95 ${
         position === 'top' ? 'bottom-14' : 'top-14'
       }`}
       role="menu"
       aria-label="Select assistant"
     >
-      {/* Custom Assistants Section */}
-      {customAssistants.length > 0 && (
-        <>
-          <div className="px-3 py-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase">Custom Assistants</span>
-          </div>
-          {customAssistants.map((assistant) => (
-            <button
-              key={assistant.id}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-              onClick={() => onSelect({
-                key: assistant.id,
-                name: assistant.name,
-                icon: getCategoryIcon(assistant.category),
-                isCustom: true,
-              })}
-              role="menuitem"
-            >
-              <span className="w-6 h-6 flex items-center justify-center rounded-md">
-                {getCategoryIcon(assistant.category)}
-              </span>
-              <span className="text-sm text-slate-900">{assistant.name}</span>
-            </button>
-          ))}
-          <div className="my-2 mx-3 border-t border-gray-200" />
-          <div className="px-3 py-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase">Assistants</span>
-          </div>
-        </>
-      )}
+      <div className="p-2 overflow-y-auto max-h-96">
+        {/* Custom Assistants Section */}
+        {customAssistants.length > 0 && (
+          <>
+            <div className="px-3 py-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase">Custom Assistants</span>
+            </div>
+            {customAssistants.map((assistant) => (
+              <button
+                key={assistant.id}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                onClick={() => onSelect({
+                  key: assistant.id,
+                  name: assistant.name,
+                  icon: getCategoryIcon(assistant.category),
+                  isCustom: true,
+                })}
+                role="menuitem"
+              >
+                <span className="w-6 h-6 flex items-center justify-center rounded-md">
+                  {getCategoryIcon(assistant.category)}
+                </span>
+                <span className="text-sm text-slate-900">{assistant.name}</span>
+              </button>
+            ))}
+            <div className="my-2 mx-3 border-t border-gray-200" />
+            <div className="px-3 py-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase">Assistants</span>
+            </div>
+          </>
+        )}
 
-      {/* Standard Assistants */}
-      {ASSISTANT_OPTIONS.slice(0, 5).map((assistant) => (
+        {/* Standard Assistants */}
+        {ASSISTANT_OPTIONS.slice(0, 5).map((assistant) => (
+          <button
+            key={assistant.key}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+            onClick={() => onSelect(assistant)}
+            role="menuitem"
+          >
+            <span className="w-6 h-6 flex items-center justify-center rounded-md">{assistant.icon}</span>
+            <span className="text-sm text-slate-900">{assistant.name}</span>
+          </button>
+        ))}
+        <div className="my-2 mx-3 border-t border-gray-200" />
         <button
-          key={assistant.key}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-          onClick={() => onSelect(assistant)}
+          onClick={() => onSelect(ASSISTANT_OPTIONS[5])}
           role="menuitem"
         >
-          <span className="w-6 h-6 flex items-center justify-center rounded-md">{assistant.icon}</span>
-          <span className="text-sm text-slate-900">{assistant.name}</span>
+          <span className="w-6 h-6 flex items-center justify-center rounded-md">{ASSISTANT_OPTIONS[5].icon}</span>
+          <span className="text-sm text-slate-900">{ASSISTANT_OPTIONS[5].name}</span>
         </button>
-      ))}
-      <div className="my-2 mx-3 border-t border-gray-200" />
-      <button
-        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-        onClick={() => onSelect(ASSISTANT_OPTIONS[5])}
-        role="menuitem"
-      >
-        <span className="w-6 h-6 flex items-center justify-center rounded-md">{ASSISTANT_OPTIONS[5].icon}</span>
-        <span className="text-sm text-slate-900">{ASSISTANT_OPTIONS[5].name}</span>
-      </button>
+      </div>
     </div>
   );
 };
